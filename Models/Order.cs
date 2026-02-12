@@ -32,6 +32,8 @@ namespace EcommerceStore.Models
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
         
         public string? DeliveryDescription { get; set; }
+        
+        public DateTime? DeliveryDate { get; set; }
 
         public List<OrderItem> OrderItems { get; set; } = new();
     }

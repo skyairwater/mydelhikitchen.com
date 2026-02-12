@@ -26,6 +26,7 @@
                         <th>Customer</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th>Delivered At</th>
                         <th class="text-end px-4">Actions</th>
                     </tr>
                 </thead>
@@ -51,6 +52,20 @@
                                     };
                                 }
                                 <span class="badge @badgeClass">@order.Status</span>
+                            </td>
+                            <td>
+                                @if (order.DeliveryDate.HasValue)
+                                {
+                                    <div class="small fw-bold">@order.DeliveryDate.Value.ToLocalTime().ToString("MMM dd, HH:mm")</div>
+                                    @if (!string.IsNullOrEmpty(order.DeliveryDescription))
+                                    {
+                                        <div class="small text-muted italic" style="font-size: 0.75rem;">"@order.DeliveryDescription"</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
                             </td>
                             <td class="text-end px-4">
                                 <div class="btn-group btn-group-sm">

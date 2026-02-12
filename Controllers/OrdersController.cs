@@ -172,6 +172,7 @@ namespace EcommerceStore.Controllers
 
             order.Status = OrderStatus.Delivered;
             order.DeliveryDescription = description;
+            order.DeliveryDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             TempData["Message"] = "Order marked as delivered.";
