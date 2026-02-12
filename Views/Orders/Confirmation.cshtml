@@ -1,0 +1,30 @@
+@model EcommerceStore.Models.Order
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container mt-5 text-center">
+    <div class="card shadow border-0 p-5">
+        <div class="mb-4 text-success">
+            <i class="bi bi-check-circle-fill" style="font-size: 5rem;"></i>
+        </div>
+        <h1 class="display-5 fw-bold mb-3">Order Placed!</h1>
+        <p class="lead mb-4">Thank you for your order. Your unique Order ID is:</p>
+        <div class="bg-light p-3 rounded mb-4">
+            <h2 class="text-primary fw-bold mb-0">@Model.UniqueOrderId</h2>
+        </div>
+        <div class="mb-4">
+            <p class="text-muted mb-1"><strong>Delivering to:</strong></p>
+            <p class="fw-bold mb-1">@Model.DeliveryAddress</p>
+            <p class="text-muted small">Contact: @Model.PhoneNumber</p>
+        </div>
+        <p class="text-muted">A confirmation email has been "sent" to <strong>@Model.CustomerEmail</strong>.</p>
+        <p class="text-muted small">You can manage, edit, or cancel your order within the next 12 hours using this ID.</p>
+        
+        <div class="mt-4">
+            <a asp-action="Manage" asp-route-id="@Model.UniqueOrderId" class="btn btn-primary btn-lg px-5">Manage Order</a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Back to Store</a>
+        </div>
+    </div>
+</div>

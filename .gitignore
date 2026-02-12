@@ -1,0 +1,35 @@
+# Visual Studio
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+
+# User Secrets (just in case they are stored in the project folder, though usually they are in AppData)
+secrets.json
+
+# Logs
+*.log
+
+# Publishing
+publish/
+
+# Miscellaneous
+.DS_Store
+Thumbs.db

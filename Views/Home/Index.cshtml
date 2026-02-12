@@ -1,0 +1,192 @@
+﻿@model IEnumerable<EcommerceStore.Models.Category>
+
+@{
+    ViewData["Title"] = "Storefront";
+}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Our Store</h1>
+        <p class="lead text-muted">Browse our products and place your order.</p>
+    </div>
+
+    @foreach (var category in Model.Where(c => c.Products.Any()))
+    {
+        <div class="mb-5">
+            <h3 class="border-bottom pb-2 mb-4 text-primary">@category.Name (@category.Products.Count())</h3>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                @foreach (var product in category.Products)
+                {
+                    <div class="col">
+                        <div class="card h-100 shadow-sm border-0 product-card">
+                            @if (!string.IsNullOrEmpty(product.ImageFileName))
+                            {
+                                <img src="~/images/@product.ImageFileName" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light text-center py-5" style="height: 200px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted">No Image Available</p>
+                                </div>
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">@product.Name</h5>
+                                <p class="card-text text-muted small">@product.Description</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="h5 mb-0 text-success fw-bold">$@product.Price.ToString("F2")</span>
+                                    <div class="input-group input-group-sm" style="width: 120px;">
+                                        <button class="btn btn-outline-secondary btn-minus" type="button" data-id="@product.Id" data-price="@product.Price">-</button>
+                                        <input type="text" class="form-control text-center qty-input" value="0" readonly data-id="@product.Id">
+                                        <button class="btn btn-outline-secondary btn-plus" type="button" data-id="@product.Id" data-price="@product.Price">+</button>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-end text-muted small">
+                                    Total: <span class="fw-bold product-total" data-id="@product.Id">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="card shadow-lg mt-5 border-0 bg-dark text-white p-4 sticky-bottom" id="order-summary-footer" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">Your Order Total: <span id="grand-total">$0.00</span></h4>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg px-5" data-bs-toggle="modal" data-bs-target="#checkoutModal">Checkout Now</button>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Complete Your Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Orders" asp-action="Checkout" method="post" id="checkout-form">
+                <div class="modal-body">
+                    <p class="text-muted">Enter your details to receive your unique Order ID.</p>
+                    <div class="mb-3">
+                        <label for="CustomerEmail" class="form-label">Email Address</label>
+                        <input type="email" name="CustomerEmail" id="CustomerEmail" class="form-control" required placeholder="name@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="PhoneNumber" class="form-label">Phone Number (US Format)</label>
+                        <input type="tel" name="PhoneNumber" id="PhoneNumber" class="form-control" required 
+                               placeholder="(555) 555-5555" 
+                               pattern="^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$"
+                               title="Please enter a valid US phone number (e.g. (555) 555-5555 or 555-555-5555)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="DeliveryAddress" class="form-label">Delivery Address</label>
+                        <input type="text" name="DeliveryAddress" id="DeliveryAddress" class="form-control" required placeholder="Start typing your address...">
+                    </div>
+                    <div id="cart-data-container"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Keep Shopping</button>
+                    <button type="submit" class="btn btn-primary px-4">Place Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let cart = {};
+
+            // Initialize Google Autocomplete
+            if (typeof google !== 'undefined') {
+                const input = document.getElementById("DeliveryAddress");
+
+                if (input) 
+                {
+                    const autocomplete = new google.maps.places.Autocomplete(input);
+                    autocomplete.setFields(["address_components", "formatted_address"]);
+                }
+            }
+
+            function updateDisplay(id) {
+                let qty = cart[id] ? cart[id].qty : 0;
+                let price = cart[id] ? cart[id].price : 0;
+                let total = qty * price;
+
+                $(`.qty-input[data-id="${id}"]`).val(qty);
+                $(`.product-total[data-id="${id}"]`).text('$' + total.toFixed(2));
+
+                let grandTotal = 0;
+                let itemCount = 0;
+                for (let key in cart) {
+                    grandTotal += cart[key].qty * cart[key].price;
+                    itemCount += cart[key].qty;
+                }
+
+                $('#grand-total').text('$' + grandTotal.toFixed(2));
+                if (itemCount > 0) {
+                    $('#order-summary-footer').fadeIn();
+                } else {
+                    $('#order-summary-footer').fadeOut();
+                }
+            }
+
+            $('.btn-plus').click(function () {
+                let id = $(this).data('id');
+                let price = parseFloat($(this).data('price'));
+                if (!cart[id]) cart[id] = { qty: 0, price: price };
+                cart[id].qty++;
+                updateDisplay(id);
+            });
+
+            $('.btn-minus').click(function () {
+                let id = $(this).data('id');
+                if (cart[id] && cart[id].qty > 0) {
+                    cart[id].qty--;
+                    if (cart[id].qty === 0) delete cart[id];
+                    updateDisplay(id);
+                }
+            });
+
+            $('#checkout-form').submit(function (e) {
+                let container = $('#cart-data-container');
+                container.empty();
+                let index = 0;
+                for (let id in cart) {
+                    container.append(`<input type="hidden" name="Items[${index}].ProductId" value="${id}" />`);
+                    container.append(`<input type="hidden" name="Items[${index}].Quantity" value="${cart[id].qty}" />`);
+                    index++;
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .product-card {
+        transition: transform 0.2s;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+    #order-summary-footer {
+        z-index: 1000;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        border-radius: 15px;
+    }
+
+    .pac-container {
+        z-index: 9999 !important;
+    }
+
+</style>

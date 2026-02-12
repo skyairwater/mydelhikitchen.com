@@ -1,0 +1,124 @@
+@model IEnumerable<EcommerceStore.Models.Order>
+
+@{
+    ViewData["Title"] = "Admin - Orders";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Order Management Dashboard</h2>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+
+    <div class="card shadow border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th class="text-end px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td>@order.OrderDate.ToLocalTime().ToString("MMM dd, HH:mm")</td>
+                            <td><span class="font-monospace">@order.UniqueOrderId</span></td>
+                            <td>
+                                <div class="small fw-bold">@order.CustomerEmail</div>
+                                <div class="small text-muted">@order.PhoneNumber</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">@order.DeliveryAddress</div>
+                            </td>
+                            <td class="fw-bold">@order.TotalAmount.ToString("C")</td>
+                            <td>
+                                @{
+                                    var badgeClass = order.Status switch
+                                    {
+                                        OrderStatus.Delivered => "bg-success",
+                                        OrderStatus.Cancelled => "bg-danger",
+                                        _ => "bg-warning text-dark"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@order.Status</span>
+                            </td>
+                            <td class="text-end px-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Manage" asp-route-id="@order.UniqueOrderId" class="btn btn-outline-primary" title="View/Edit">
+                                        View
+                                    </a>
+                                    
+                                    @if (order.Status == OrderStatus.Pending)
+                                    {
+                                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#deliveredModal-@order.UniqueOrderId">
+                                            Deliver
+                                        </button>
+                                        <form asp-action="AdminCancel" asp-route-id="@order.UniqueOrderId" method="post" onsubmit="return confirm('Cancel this order?')">
+                                            <button type="submit" class="btn btn-outline-danger">Cancel</button>
+                                        </form>
+                                    }
+                                </div>
+
+                                <!-- Delivered Modal -->
+                                <div class="modal fade" id="deliveredModal-@order.UniqueOrderId" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Mark Order @order.UniqueOrderId as Delivered</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form asp-action="MarkAsDelivered" asp-route-id="@order.UniqueOrderId" method="post">
+                                                <div class="modal-body text-start">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Delivery Notes (Optional)</label>
+                                                        <textarea name="description" class="form-control" rows="3" placeholder="Enter delivery details..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-success">Confirm Delivery</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white border-top-0">
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="AdminIndex" asp-route-page="@(currentPage - 1)">Previous</a>
+                        </li>
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="AdminIndex" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="AdminIndex" asp-route-page="@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>

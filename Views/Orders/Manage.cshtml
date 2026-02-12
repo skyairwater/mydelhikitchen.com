@@ -1,0 +1,181 @@
+@model EcommerceStore.Models.Order
+
+@{
+    ViewData["Title"] = "Manage Order";
+    bool canEdit = ViewBag.CanEdit ?? false;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Order: @Model.UniqueOrderId</h4>
+                    @{
+                        var badgeClass = Model.Status switch
+                        {
+                            OrderStatus.Delivered => "bg-success",
+                            OrderStatus.Cancelled => "bg-danger",
+                            _ => "bg-warning text-dark"
+                        };
+                    }
+                    <span class="badge @badgeClass">
+                        @Model.Status
+                    </span>
+                 </div>
+                <div class="card-body">
+                    @if (TempData["Message"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["Message"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    <div class="mb-4">
+                        <p class="mb-1 text-muted"><strong>Ordered On:</strong> @Model.OrderDate.ToLocalTime()</p>
+                        <p class="mb-1 text-muted"><strong>Customer:</strong> @Model.CustomerEmail</p>
+                        <p class="mb-1 text-muted"><strong>Phone:</strong> @Model.PhoneNumber</p>
+                        <p class="mb-1 text-muted"><strong>Delivery Address:</strong> @Model.DeliveryAddress</p>
+                        @if (!string.IsNullOrEmpty(Model.DeliveryDescription))
+                        {
+                            <p class="mb-1 text-muted"><strong>Delivery Note:</strong> @Model.DeliveryDescription</p>
+                        }
+                    </div>
+
+                    <h5 class="fw-bold border-bottom pb-2">Order Items</h5>
+                    <ul class="list-group list-group-flush mb-4">
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <h6 class="mb-0">@item.Product.Name</h6>
+                                    <small class="text-muted">Qty: @item.Quantity x @item.Price.ToString("C")</small>
+                                </div>
+                                <span class="fw-bold">@((item.Quantity * item.Price).ToString("C"))</span>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="d-flex justify-content-between align-items-center h4 fw-bold">
+                        <span>Total</span>
+                        <span class="text-success">@Model.TotalAmount.ToString("C")</span>
+                    </div>
+
+                    @if (canEdit)
+                    {
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-info-circle me-2"></i> You can still edit or cancel this order.
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button" class="btn btn-warning flex-grow-1" data-bs-toggle="modal" data-bs-target="#editModal">Edit Order</button>
+                            <form asp-action="Cancel" asp-route-id="@Model.UniqueOrderId" method="post" class="flex-grow-1">
+                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to cancel this order?')">Cancel Order</button>
+                            </form>
+                        </div>
+                    }
+                    else if (Model.Status == OrderStatus.Pending)
+                    {
+                        <div class="alert alert-warning mt-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i> The 12-hour window for changes has passed.
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-link text-muted">Return to Store</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (canEdit)
+{
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Your Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="Edit" asp-route-id="@Model.UniqueOrderId" method="post" id="edit-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="EditPhoneNumber" class="form-label">Update Phone Number</label>
+                            <input type="tel" name="PhoneNumber" id="EditPhoneNumber" value="@Model.PhoneNumber" class="form-control" required
+                                   pattern="^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$"
+                                   title="Please enter a valid US phone number">
+                        </div>
+                        <div class="mb-3">
+                            <label for="EditDeliveryAddress" class="form-label">Update Delivery Address</label>
+                            <input type="text" name="DeliveryAddress" id="EditDeliveryAddress" value="@Model.DeliveryAddress" class="form-control" required>
+                        </div>
+                        <p class="text-muted small">Adjust quantities for the items you want to keep. Set to 0 to remove an item.</p>
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var index = 0; }
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td>@item.Product.Name</td>
+                                        <td>
+                                            <div class="input-group input-group-sm mx-auto" style="width: 120px;">
+                                                <button class="btn btn-outline-secondary btn-minus-edit" type="button" data-index="@index">-</button>
+                                                <input type="number" name="Items[@index].Quantity" value="0" class="form-control text-center qty-input-edit" data-index="@index" min="0">
+                                                <input type="hidden" name="Items[@index].ProductId" value="@item.ProductId">
+                                                <button class="btn btn-outline-secondary btn-plus-edit" type="button" data-index="@index">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">@item.Price.ToString("C")</td>
+                                    </tr>
+                                    index++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#checkoutModal">Add More Products</button>
+                        <button type="submit" class="btn btn-primary">Update Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Google Autocomplete for Edit
+            if (typeof google !== 'undefined') {
+                const input = document.getElementById("EditDeliveryAddress");
+                if (input) {
+                    const autocomplete = new google.maps.places.Autocomplete(input);
+                    autocomplete.setFields(["formatted_address"]);
+                }
+            }
+
+            $('.btn-plus-edit').click(function () {
+                let index = $(this).data('index');
+                let input = $(`.qty-input-edit[data-index="${index}"]`);
+                input.val(parseInt(input.val()) + 1);
+            });
+
+            $('.btn-minus-edit').click(function () {
+                let index = $(this).data('index');
+                let input = $(`.qty-input-edit[data-index="${index}"]`);
+                let val = parseInt(input.val());
+                if (val > 0) input.val(val - 1);
+            });
+        });
+    </script>
+}
