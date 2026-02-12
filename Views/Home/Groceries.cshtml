@@ -33,7 +33,7 @@
                                     <span class="h5 mb-0 text-success fw-bold">$@product.Price.ToString("F2")</span>
                                     <div class="input-group input-group-sm" style="width: 120px;">
                                         <button class="btn btn-outline-secondary btn-minus" type="button" data-id="@product.Id" data-price="@product.Price">-</button>
-                                        <input type="text" class="form-control text-center qty-input" value="0" readonly data-id="@product.Id">
+                                        <input type="text" class="form-control text-center qty-input" value="0" readonly data-id="@product.Id" autocomplete="off">
                                         <button class="btn btn-outline-secondary btn-plus" type="button" data-id="@product.Id" data-price="@product.Price">+</button>
                                     </div>
                                 </div>
@@ -134,8 +134,11 @@
                 }
             }
 
-            // Sync on load
+            // Sync on load and on page show (handles browser back button)
             syncDisplay();
+            window.addEventListener('pageshow', function(event) {
+                syncDisplay();
+            });
 
             // Handle cart updates from site.js
             $(document).on('cartUpdated', function() {

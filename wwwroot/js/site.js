@@ -1,8 +1,23 @@
 ﻿const CartManager = {
-    cart: JSON.parse(localStorage.getItem('ecommerce_cart')) || {},
+    cart: {},
+
+    init() {
+        try {
+            const saved = localStorage.getItem('ecommerce_cart');
+            this.cart = saved ? JSON.parse(saved) : {};
+        } catch (e) {
+            console.error('Failed to parse cart', e);
+            this.cart = {};
+        }
+        this.updateBadge();
+    },
 
     save() {
-        localStorage.setItem('ecommerce_cart', JSON.stringify(this.cart));
+        try {
+            localStorage.setItem('ecommerce_cart', JSON.stringify(this.cart));
+        } catch (e) {
+            console.error('Failed to save cart', e);
+        }
         this.updateBadge();
         $(document).trigger('cartUpdated', [this.cart]);
     },
@@ -29,6 +44,13 @@
             }
             this.save();
         }
+    },
+
+    clear() {
+        this.cart = {};
+        localStorage.removeItem('ecommerce_cart'); // Explicit removal
+        this.updateBadge();
+        $(document).trigger('cartUpdated', [this.cart]);
     },
 
     getCart() {
@@ -97,8 +119,10 @@
     }
 };
 
+window.CartManager = CartManager; // Ensure global access
+
 $(document).ready(function () {
-    CartManager.updateBadge();
+    CartManager.init();
 
     $('#cart-modal').on('show.bs.modal', function () {
         CartManager.renderCartModal();
