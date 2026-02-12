@@ -36,6 +36,14 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+//Apply migrations automatically inside the app.dotnet publish -c Release -o ./publish
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 // Seed Database
 using (var scope = app.Services.CreateScope())
 {
@@ -81,5 +89,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
    .WithStaticAssets();
+
+
 
 app.Run();
