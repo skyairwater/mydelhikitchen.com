@@ -102,32 +102,31 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            let cart = {};
-
             // Initialize Google Autocomplete
             if (typeof google !== 'undefined') {
                 const input = document.getElementById("DeliveryAddress");
-
-                if (input) 
-                {
+                if (input) {
                     const autocomplete = new google.maps.places.Autocomplete(input);
                     autocomplete.setFields(["address_components", "formatted_address"]);
                 }
             }
 
-            function updateDisplay(id) {
-                let qty = cart[id] ? cart[id].qty : 0;
-                let price = cart[id] ? cart[id].price : 0;
-                let total = qty * price;
-
-                $(`.qty-input[data-id="${id}"]`).val(qty);
-                $(`.product-total[data-id="${id}"]`).text('$' + total.toFixed(2));
+            function syncDisplay() {
+                const cart = CartManager.getCart();
+                
+                // Reset all inputs first
+                $('.qty-input').val(0);
+                $('.product-total').text('$0.00');
 
                 let grandTotal = 0;
                 let itemCount = 0;
-                for (let key in cart) {
-                    grandTotal += cart[key].qty * cart[key].price;
-                    itemCount += cart[key].qty;
+
+                for (let id in cart) {
+                    const item = cart[id];
+                    $(`.qty-input[data-id="${id}"]`).val(item.qty);
+                    $(`.product-total[data-id="${id}"]`).text('$' + (item.qty * item.price).toFixed(2));
+                    grandTotal += item.qty * item.price;
+                    itemCount += item.qty;
                 }
 
                 $('#grand-total').text('$' + grandTotal.toFixed(2));
@@ -138,24 +137,32 @@
                 }
             }
 
+            // Sync on load
+            syncDisplay();
+
+            // Handle cart updates from site.js
+            $(document).on('cartUpdated', function() {
+                syncDisplay();
+            });
+
             $('.btn-plus').click(function () {
-                let id = $(this).data('id');
-                let price = parseFloat($(this).data('price'));
-                if (!cart[id]) cart[id] = { qty: 0, price: price };
-                cart[id].qty++;
-                updateDisplay(id);
+                const card = $(this).closest('.product-card');
+                const product = {
+                    id: $(this).data('id'),
+                    name: card.find('.card-title').text(),
+                    category: card.closest('.mb-5').find('h3').text().split('(')[0].trim(),
+                    price: parseFloat($(this).data('price'))
+                };
+                CartManager.addItem(product);
             });
 
             $('.btn-minus').click(function () {
-                let id = $(this).data('id');
-                if (cart[id] && cart[id].qty > 0) {
-                    cart[id].qty--;
-                    if (cart[id].qty === 0) delete cart[id];
-                    updateDisplay(id);
-                }
+                const id = $(this).data('id');
+                CartManager.removeItem(id);
             });
 
             $('#checkout-form').submit(function (e) {
+                const cart = CartManager.getCart();
                 let container = $('#cart-data-container');
                 container.empty();
                 let index = 0;
