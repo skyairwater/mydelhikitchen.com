@@ -4,11 +4,7 @@
     ViewData["Title"] = "Storefront";
 }
 
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold">Our Store</h1>
-        <p class="lead text-muted">Browse our products and place your order.</p>
-    </div>
+<div class="container">    
 
     @foreach (var category in Model.Where(c => c.Products.Any()))
     {
@@ -32,7 +28,7 @@
                             }
                             <div class="card-body">
                                 <h5 class="card-title fw-bold">@product.Name</h5>
-                                <p class="card-text text-muted small">@product.Description</p>
+                                <p class="card-text opacity-75 small">@product.Description</p>
                                 <div class="d-flex justify-content-between align-items-center mt-3">
                                     <span class="h5 mb-0 text-success fw-bold">$@product.Price.ToString("F2")</span>
                                     <div class="input-group input-group-sm" style="width: 120px;">
@@ -41,7 +37,7 @@
                                         <button class="btn btn-outline-secondary btn-plus" type="button" data-id="@product.Id" data-price="@product.Price">+</button>
                                     </div>
                                 </div>
-                                <div class="mt-2 text-end text-muted small">
+                                <div class="mt-2 text-end opacity-75 small">
                                     Total: <span class="fw-bold product-total" data-id="@product.Id">$0.00</span>
                                 </div>
                             </div>
@@ -52,10 +48,10 @@
         </div>
     }
 
-    <div class="card shadow-lg mt-5 border-0 bg-dark text-white p-4 sticky-bottom" id="order-summary-footer" style="display: none;">
+    <div class="card shadow-lg mt-5 border-0 theme-aware-footer p-4 sticky-bottom" id="order-summary-footer" style="display: none;">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h4 class="mb-0">Your Order Total: <span id="grand-total">$0.00</span></h4>
+                <h4 class="mb-0">Your Order Total: <span id="grand-total" class="text-success">$0.00</span></h4>
             </div>
             <button type="button" class="btn btn-primary btn-lg px-5" data-bs-toggle="modal" data-bs-target="#checkoutModal">Checkout Now</button>
         </div>
@@ -72,7 +68,7 @@
             </div>
             <form asp-controller="Orders" asp-action="Checkout" method="post" id="checkout-form">
                 <div class="modal-body">
-                    <p class="text-muted">Enter your details to receive your unique Order ID.</p>
+                    <p class="opacity-75">Enter your details to receive your unique Order ID.</p>
                     <div class="mb-3">
                         <label for="CustomerEmail" class="form-label">Email Address</label>
                         <input type="email" name="CustomerEmail" id="CustomerEmail" class="form-control" required placeholder="name@example.com">
@@ -190,6 +186,10 @@
         right: 20px;
         width: auto;
         border-radius: 15px;
+        background-color: var(--nav-bg);
+        backdrop-filter: blur(15px);
+        color: var(--text-color);
+        border: 1px solid rgba(128,128,128,0.2) !important;
     }
 
     .pac-container {

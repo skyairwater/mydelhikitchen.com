@@ -109,4 +109,31 @@ $(document).ready(function () {
         CartManager.removeItem(id);
         CartManager.renderCartModal();
     });
+
+    // Theme Management
+    const themeManager = {
+        init() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            this.setTheme(currentTheme);
+
+            $('#theme-toggle').click(() => {
+                const newTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+                this.setTheme(newTheme);
+            });
+        },
+        setTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            if (theme === 'dark') {
+                $('#theme-icon-light').hide();
+                $('#theme-icon-dark').show();
+            } else {
+                $('#theme-icon-light').show();
+                $('#theme-icon-dark').hide();
+            }
+        }
+    };
+
+    themeManager.init();
 });
