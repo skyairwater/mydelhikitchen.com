@@ -59,6 +59,17 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Block direct access to Register page
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/Identity/Account/Register"))
+    {
+        context.Response.Redirect("/Identity/Account/Login");
+        return;
+    }
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapStaticAssets();

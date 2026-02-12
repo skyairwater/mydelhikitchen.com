@@ -178,7 +178,7 @@ namespace EcommerceStore.Controllers
             return RedirectToAction(nameof(AdminIndex));
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost]
         public async Task<IActionResult> AdminCancel(string id)
         {
