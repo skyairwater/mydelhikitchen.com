@@ -1,1 +1,33 @@
-﻿<h1>Catering</h1>
+﻿@{
+    ViewData["Title"] = "Catering";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-primary">Indian Food Catering Services</h1>
+        <p class="lead text-muted">Make your events memorable with the best Indian food catering in Charlotte, NC.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm p-4">
+                <h3 class="h4 fw-bold mb-3"><i class="bi bi-people-fill me-2"></i>Parties & Events</h3>
+                <p>From housewarmings to birthday parties, we provide customized menus that your guests will love.</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm p-4">
+                <h3 class="h4 fw-bold mb-3"><i class="bi bi-briefcase-fill me-2"></i>Corporate Catering</h3>
+                <p>Professional catering solutions for office lunches, meetings, and corporate gatherings.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 text-center">
+        <div class="bg-light p-4 rounded-3">
+            <h4 class="fw-bold">Ready to plan your menu?</h4>
+            <p>Call Pinki Basra at <strong>980.370.1091</strong> for a custom quote.</p>
+            <a asp-action="Contact" class="btn btn-primary btn-lg">Contact Us</a>
+        </div>
+    </div>
+</div>

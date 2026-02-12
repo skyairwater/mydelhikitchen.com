@@ -1,1 +1,41 @@
-﻿<img src="~/images/delhikitchenlogo.png" />
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container-fluid px-0">
+    <div class="position-relative overflow-hidden p-3 p-md-5 text-center" style="background: url('/images/delhikitchenlogo.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
+        
+    </div>
+
+    <div class="container py-5">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold">Your One-Stop Shop for Indian Flavors in Charlotte</h2>
+                <p class="text-muted lead">From farm-fresh produce to authentic spices and ready-to-eat meals.</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-4 text-center">
+                    <i class="bi bi-shop text-primary mb-3" style="font-size: 2.5rem;"></i>
+                    <h3 class="h5 fw-bold">Authentic Groceries</h3>
+                    <p class="small text-muted">Wide range of Indian spices, dals, rice, and frozen snacks at best prices.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-4 text-center">
+                    <i class="bi bi-egg-fried text-warning mb-3" style="font-size: 2.5rem;"></i>
+                    <h3 class="h5 fw-bold">Fresh Indian Food</h3>
+                    <p class="small text-muted">Delicious North Indian meals prepared fresh with high-quality ingredients.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-4 text-center">
+                    <i class="bi bi-truck text-success mb-3" style="font-size: 2.5rem;"></i>
+                    <h3 class="h5 fw-bold">Catering Services</h3>
+                    <p class="small text-muted">Reliable Indian food catering for parties and events across Charlotte.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
