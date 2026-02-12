@@ -95,7 +95,11 @@
         }
 
         $('#cart-modal-footer').show();
-        let html = '<ul class="list-group list-group-flush">';
+        let html = '<div class="d-flex justify-content-between align-items-center mb-2 px-1">';
+        html += '<span class="small text-muted">Items</span>';
+        html += '<button class="btn btn-link btn-sm text-danger p-0 text-decoration-none" id="empty-cart-btn" data-bs-toggle="modal" data-bs-target="#confirm-empty-cart-modal"><i class="bi bi-trash3 me-1"></i>Empty Cart</button>';
+        html += '</div>';
+        html += '<ul class="list-group list-group-flush">';
         for (let id in cart) {
             const item = cart[id];
             html += `
@@ -132,6 +136,15 @@ $(document).ready(function () {
         const id = $(this).data('id');
         CartManager.removeItem(id);
         CartManager.renderCartModal();
+    });
+
+    $(document).on('click', '#confirm-clear-cart', function () {
+        CartManager.clear();
+        CartManager.renderCartModal();
+        bootstrap.Modal.getInstance(document.getElementById('confirm-empty-cart-modal')).hide();
+        // Also close the cart modal if it was open on top
+        const cartModal = bootstrap.Modal.getInstance(document.getElementById('cart-modal'));
+        if (cartModal) cartModal.hide();
     });
 
     // Theme Management
