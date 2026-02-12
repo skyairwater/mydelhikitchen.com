@@ -30,7 +30,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   margin-bottom: 60px;
-  padding-top: 70px;
+  padding-top: 30px;
   /* Space for fixed navbar */
 }
 

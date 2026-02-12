@@ -1,11 +1,8 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using EcommerceStore.Models;
 using EcommerceStore.Data;
+using EcommerceStore.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore; // Added for Include and ToListAsync
-using System.Threading.Tasks; // Added for async/await
-using Microsoft.Extensions.Logging; // Added for ILogger
+using System.Diagnostics;
 
 namespace EcommerceStore.Controllers;
 
@@ -21,11 +18,35 @@ public class HomeController : Controller
     }
 
     public async Task<IActionResult> Index()
+    {   
+        await Task.Yield(); // Simulate async work
+        return View();
+    }
+
+    public async Task<IActionResult> Groceries()
     {
         var categories = await _context.Categories
             .Include(c => c.Products.Where(p => p.IsActive))
             .ToListAsync();
         return View(categories);
+    }
+
+    public async Task<IActionResult> Food()
+    {
+        await Task.Yield(); // Simulate async work
+        return View();
+    }
+
+    public async Task<IActionResult> Catering()
+    {
+        await Task.Yield(); // Simulate async work
+        return View();
+    }
+
+    public async Task<IActionResult> Contact()
+    {
+        await Task.Yield(); // Simulate async work
+        return View();
     }
 
     public IActionResult Privacy()
