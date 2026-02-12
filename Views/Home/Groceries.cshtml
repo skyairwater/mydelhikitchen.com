@@ -6,47 +6,69 @@
 
 <div class="container-fluid px-0 py-4">
 
-    @foreach (var category in Model.Where(c => c.Products.Any()))
-    {
-        <div class="mb-5">
-            <h3 class="border-bottom pb-2 mb-4 text-primary">@category.Name (@category.Products.Count())</h3>
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                @foreach (var product in category.Products)
-                {
-                    <div class="col">
-                        <div class="card h-100 shadow-sm border-0 product-card">
-                            @if (!string.IsNullOrEmpty(product.ImageFileName))
-                            {
-                                <img src="~/images/@product.ImageFileName" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
-                            }
-                            else
-                            {
-                                <div class="bg-light text-center py-5" style="height: 200px;">
-                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                                    <p class="text-muted">No Image Available</p>
-                                </div>
-                            }
-                            <div class="card-body">
-                                <h5 class="card-title fw-bold">@product.Name</h5>
-                                <p class="card-text opacity-75 small">@product.Description</p>
-                                <div class="d-flex justify-content-between align-items-center mt-3">
-                                    <span class="h5 mb-0 text-success fw-bold">$@product.Price.ToString("F2")</span>
-                                    <div class="input-group input-group-sm" style="width: 120px;">
-                                        <button class="btn btn-outline-secondary btn-minus" type="button" data-id="@product.Id" data-price="@product.Price">-</button>
-                                        <input type="text" class="form-control text-center qty-input" value="0" readonly data-id="@product.Id" autocomplete="off">
-                                        <button class="btn btn-outline-secondary btn-plus" type="button" data-id="@product.Id" data-price="@product.Price">+</button>
+    <div class="accordion accordion-flush" id="categoryAccordion">
+        @{
+            var activeCategories = Model.Where(c => c.Products.Any()).ToList();
+            for (int i = 0; i < activeCategories.Count; i++)
+            {
+                var category = activeCategories[i];
+                <div class="accordion-item border-0 mb-3 shadow-sm rounded-4 overflow-hidden">
+                    <h2 class="accordion-header" id="heading-@category.Id">
+                        <button class="accordion-button fw-bold py-3 fs-5" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse-@category.Id" 
+                                aria-expanded="true" 
+                                aria-controls="collapse-@category.Id">
+                            <i class="bi bi-tag-fill me-2 text-primary"></i>
+                            @category.Name 
+                            <span class="badge bg-secondary-subtle text-secondary ms-2 rounded-pill fs-7">@category.Products.Count() items</span>
+                        </button>
+                    </h2>
+                    <div id="collapse-@category.Id" 
+                         class="accordion-collapse collapse show" 
+                         aria-labelledby="heading-@category.Id">
+                        <div class="accordion-body bg-light-subtle pt-4">
+                            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+                                @foreach (var product in category.Products)
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 shadow-sm border-0 product-card">
+                                            @if (!string.IsNullOrEmpty(product.ImageFileName))
+                                            {
+                                                <img src="~/images/@product.ImageFileName" class="card-img-top" alt="@product.Name" style="height: 180px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-light text-center py-5" style="height: 180px;">
+                                                    <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                                </div>
+                                            }
+                                            <div class="card-body">
+                                                <h5 class="card-title fw-bold mb-1">@product.Name</h5>
+                                                <p class="card-text opacity-75 small mb-3 text-truncate-2">@product.Description</p>
+                                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                                    <span class="h5 mb-0 text-success fw-bold">$@product.Price.ToString("F2")</span>
+                                                    <div class="input-group input-group-sm" style="width: 110px;">
+                                                        <button class="btn btn-outline-secondary btn-minus" type="button" data-id="@product.Id" data-price="@product.Price">-</button>
+                                                        <input type="text" class="form-control text-center qty-input" value="0" readonly data-id="@product.Id" autocomplete="off">
+                                                        <button class="btn btn-outline-secondary btn-plus" type="button" data-id="@product.Id" data-price="@product.Price">+</button>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 text-end opacity-75 small">
+                                                    Total: <span class="fw-bold product-total" data-id="@product.Id">$0.00</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="mt-2 text-end opacity-75 small">
-                                    Total: <span class="fw-bold product-total" data-id="@product.Id">$0.00</span>
-                                </div>
+                                }
                             </div>
                         </div>
                     </div>
-                }
-            </div>
-        </div>
-    }
+                </div>
+            }
+        }
+    </div>
 
     <div class="card shadow-lg mt-5 border-0 theme-aware-footer p-4 sticky-bottom" id="order-summary-footer" style="display: none;">
         <div class="d-flex justify-content-between align-items-center">
@@ -147,10 +169,13 @@
 
             $('.btn-plus').click(function () {
                 const card = $(this).closest('.product-card');
+                const accordionItem = $(this).closest('.accordion-item');
                 const product = {
                     id: $(this).data('id'),
                     name: card.find('.card-title').text(),
-                    category: card.closest('.mb-5').find('h3').text().split('(')[0].trim(),
+                    category: accordionItem.find('.accordion-button').contents().filter(function() {
+                        return this.nodeType === 3; // Get only text nodes
+                    }).text().trim(),
                     price: parseFloat($(this).data('price'))
                 };
                 CartManager.addItem(product);
@@ -184,10 +209,34 @@
 
 <style>
     .product-card {
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 12px;
+        overflow: hidden;
     }
     .product-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(128, 128, 128, 0.05) !important;
+        color: var(--text-color) !important;
+    }
+    .accordion-button:not(.collapsed) .bi {
+        color: var(--primary-color) !important;
+    }
+    .accordion-button:not(.collapsed) .badge {
+        background-color: rgba(128, 128, 128, 0.1) !important;
+        color: var(--text-color) !important;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,0.1);
     }
     #order-summary-footer {
         z-index: 1000;
