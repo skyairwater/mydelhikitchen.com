@@ -2,24 +2,160 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="container-fluid px-0">
-    <div class="position-relative overflow-hidden p-3 p-md-5 text-center" style="background: url('/images/delhikitchenlogo.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-height: 60vh; display: flex; align-items: center; justify-content: center;">
+<style>
+    :root {
         
-    </div>
+        --gold: #d7b56d;
+        --text: black;
+    }
 
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(1000px 600px at 50% 35%, rgba(215,181,109,0.10), transparent 60%), var(--bg);
+        font-family: Georgia, "Times New Roman", serif;
+        overflow: hidden;
+    }
+
+    .wrap {
+        text-align: center;
+        transform: translateY(6px);
+    }
+
+    /* Title */
+    .title {
+        margin: 0;
+        font-size: clamp(42px, 6vw, 84px);
+        color: var(--text);
+        font-weight: 400;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        opacity: 0;
+        transform: translateY(22px);
+        filter: blur(6px);
+        transition: opacity 1.2s ease, transform 1.2s ease, filter 1.2s ease, letter-spacing 1.6s ease;
+    }
+
+    /* Underline stroke */
+    .rule {
+        width: 0;
+        height: 1px;
+        margin: 18px auto 0;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: 0;
+        transition: width 1.2s ease, opacity 1.2s ease;
+        max-width: 520px;
+    }
+
+    /* Small tagline (optional but elegant) */
+    .tagline {
+        margin: 14px 0 0;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: blue;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 1s ease, transform 1s ease;
+    }
+
+    /* Activated state */
+    .show .title {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+        letter-spacing: 0.22em;
+    }
+
+    .show .rule {
+        width: min(70vw, 520px);
+        opacity: 1;
+        transition-delay: 0.35s;
+    }
+
+    .show .tagline {
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0.75s;
+    }
+
+    /* Gentle “candle glow” shimmer */
+    .glow {
+        position: absolute;
+        width: 520px;
+        height: 520px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(215,181,109,0.14), transparent 60%);
+        filter: blur(10px);
+        animation: drift 6s ease-in-out infinite;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    @@keyframes drift {
+        0%, 100% {
+            transform: translate(-10px, -8px) scale(1);
+        }
+
+        50% {
+            transform: translate(14px, 10px) scale(1.03);
+        }
+    }
+
+    /* Respect reduced motion */
+    @@media (prefers-reduced-motion: reduce) {
+        .title, .rule, .tagline, .glow {
+            animation: none !important;
+            transition: none !important;
+        }
+
+        .title, .tagline {
+            opacity: 1;
+            transform: none;
+            filter: none;
+        }
+
+        .rule {
+            width: min(70vw, 520px);
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="glow" aria-hidden="true"></div>
+
+<div class="wrap" id="wrap">
+    <h1 class="title">Delhi Kitchen</h1>
+    <div class="rule"></div>
+    <p class="tagline">Cloud Kitchen • Since 2026</p>
+</div>
+
+<script>
+    window.addEventListener("load", () => {
+      // small delay makes it feel more "premium"
+      setTimeout(() => document.getElementById("wrap").classList.add("show"), 120);
+    });
+</script>
+
+
+<div class="container-fluid px-0">
+    
     <div class="container py-5">
         <div class="row text-center mb-5">
             <div class="col-12">
-                <h2 class="fw-bold">Your One-Stop Shop for Indian Flavors in Charlotte</h2>
-                <p class="text-muted lead">From farm-fresh produce to authentic spices and ready-to-eat meals.</p>
+                <h2 class="fw-bold">Pure Vegetarian, Healthy, Freshly prepared food delivered to your door step in Charlotte</h2>                
             </div>
         </div>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card h-100 border-0 shadow-sm p-4 text-center">
                     <i class="bi bi-shop text-primary mb-3" style="font-size: 2.5rem;"></i>
-                    <h3 class="h5 fw-bold">Authentic Groceries</h3>
-                    <p class="small text-muted">Wide range of Indian spices, dals, rice, and frozen snacks at best prices.</p>
+                    <h3 class="h5 fw-bold">Indian Groceries</h3>
+                    <p class="small text-muted">Wide range of Indian spices, dals, rice, and frozen snacks at prices less than retail stores, delivered free to your house.</p>
                 </div>
             </div>
             <div class="col-md-4">
