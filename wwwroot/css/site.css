@@ -29,7 +29,7 @@ body {
   transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
   background-color: var(--bg-color);
   color: var(--text-color);
-  margin-bottom: 60px;
+  margin-bottom: 10px;
   padding-top: 30px;
   /* Space for fixed navbar */
 }

@@ -17,12 +17,14 @@ public class HomeController : Controller
         _context = context;
     }
 
+    [Route("Home")]
     public async Task<IActionResult> Index()
     {   
         await Task.Yield(); // Simulate async work
         return View();
     }
 
+    
     public async Task<IActionResult> Groceries()
     {
         var categories = await _context.Categories
@@ -31,24 +33,28 @@ public class HomeController : Controller
         return View(categories);
     }
 
+    [Route("Food")]
     public async Task<IActionResult> Food()
     {
         await Task.Yield(); // Simulate async work
         return View();
     }
 
+    [Route("Catering")]
     public async Task<IActionResult> Catering()
     {
         await Task.Yield(); // Simulate async work
         return View();
     }
 
+    [Route("Contact")]
     public async Task<IActionResult> Contact()
     {
         await Task.Yield(); // Simulate async work
         return View();
     }
 
+    [Route("Privacy")]
     public IActionResult Privacy()
     {
         return View();
