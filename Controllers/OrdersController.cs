@@ -3,16 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using EcommerceStore.Data;
 using EcommerceStore.Models;
 using Microsoft.AspNetCore.Authorization;
+using EcommerceStore.Services;
 
 namespace EcommerceStore.Controllers
 {
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public OrdersController(ApplicationDbContext context)
+        public OrdersController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpPost]
@@ -50,8 +53,17 @@ namespace EcommerceStore.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
-                // Mock Email Sending
-                System.Diagnostics.Debug.WriteLine($"Email sent to {order.CustomerEmail} with Order ID: {order.UniqueOrderId}");
+                // Send Email Notification
+                try
+                {
+                    await _emailService.SendOrderConfirmationEmailAsync(order);
+                    System.Diagnostics.Debug.WriteLine($"Email sent to {order.CustomerEmail} with Order ID: {order.UniqueOrderId}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to send email: {ex.Message}");
+                    // We don't want to fail the checkout if email sending fails
+                }
                 
                 return RedirectToAction(nameof(Confirmation), new { id = order.UniqueOrderId });
             }
