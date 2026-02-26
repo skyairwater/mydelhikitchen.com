@@ -2,17 +2,50 @@
 
 @{
     ViewData["Title"] = "Groceries";
+    var activeCategories = Model.Where(c => c.Products.Any()).ToList();
 }
 
 <div class="container-fluid px-0 py-4">
 
-    <div class="accordion accordion-flush" id="categoryAccordion">
+    <div class="category-nav-container shadow-sm p-2">
+        <div class="container-fluid px-0">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md-5 col-lg-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="productSearch" class="form-control border-0" placeholder="Search products...">
+                    </div>
+                </div>
+                <div class="col-12 col-md-7 col-lg-8">
+                    <div class="dropdown" id="categoryDropdownContainer">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle w-100 d-flex justify-content-between align-items-center border-0 bg-white-10 text-start px-3 py-2" 
+                                type="button" id="categoryDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span><i class="bi bi-list-task me-2"></i>Select Category</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 w-100" aria-labelledby="categoryDropdownButton" style="max-height: 400px; overflow-y: auto;">
+                            @foreach (var category in activeCategories)
+                            {
+                                <li>
+                                    <a class="dropdown-item category-select-link py-2 d-flex justify-content-between align-items-center" 
+                                       href="#category-@category.Id" data-category="@category.Name">
+                                        @category.Name
+                                        <span class="badge rounded-pill bg-light text-dark border ms-2">@category.Products.Count()</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion accordion-flush pt-2" id="categoryAccordion">
         @{
-            var activeCategories = Model.Where(c => c.Products.Any()).ToList();
             for (int i = 0; i < activeCategories.Count; i++)
             {
                 var category = activeCategories[i];
-                <div class="accordion-item border-0 mb-3 shadow-sm rounded-4 overflow-hidden">
+                <div class="accordion-item border-0 mb-3 shadow-sm rounded-4 overflow-hidden" id="category-@category.Id">
                     <h2 class="accordion-header" id="heading-@category.Id">
                         <button class="accordion-button fw-bold py-3 fs-5" 
                                 type="button" 
@@ -203,6 +236,85 @@
                 let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
                 e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
             });
+
+            // Active category highlighting on scroll + update dropdown text
+            $(window).scroll(function() {
+                var scrollDistance = $(window).scrollTop() + 150;
+                var found = false;
+
+                $('.accordion-item:visible').each(function(i) {
+                    if ($(this).position().top <= scrollDistance) {
+                        var categoryName = $(this).find('.accordion-button').contents().filter(function() {
+                            return this.nodeType === 3;
+                        }).text().trim();
+                        
+                        $('#categoryDropdownButton span').html('<i class="bi bi-list-task me-2"></i>' + categoryName);
+                        
+                        $('.category-select-link.active').removeClass('active');
+                        $('.category-select-link').eq(i).addClass('active');
+                        found = true;
+                    }
+                });
+
+                if (!found && $('.accordion-item:visible').length > 0) {
+                     $('#categoryDropdownButton span').html('<i class="bi bi-list-task me-2"></i>Select Category');
+                }
+            }).scroll();
+
+            // Smooth scroll adjustment for category links
+            $('.category-select-link').click(function(e) {
+                e.preventDefault();
+                var target = $(this).attr('href');
+                $('html, body').animate({
+                    scrollTop: $(target).offset().top - 110
+                }, 100);
+            });
+
+            // Product Filtering Logic
+            $('#productSearch').on('input', function() {
+                var query = $(this).val().toLowerCase().trim();
+                
+                $('.accordion-item').each(function() {
+                    var $accordion = $(this);
+                    var hasVisibleProducts = false;
+
+                    $accordion.find('.col').each(function() {
+                        var $productCol = $(this);
+                        var productName = $productCol.find('.card-title').text().toLowerCase();
+                        var productDesc = $productCol.find('.card-text').text().toLowerCase();
+
+                        if (productName.includes(query) || productDesc.includes(query)) {
+                            $productCol.show();
+                            hasVisibleProducts = true;
+                        } else {
+                            $productCol.hide();
+                        }
+                    });
+
+                    if (hasVisibleProducts) {
+                        $accordion.show();
+                    } else {
+                        $accordion.hide();
+                    }
+                });
+
+                // Update dropdown visibility
+                $('.category-select-link').each(function() {
+                    var targetId = $(this).attr('href');
+                    if ($(targetId).is(':visible')) {
+                        $(this).closest('li').show();
+                    } else {
+                        $(this).closest('li').hide();
+                    }
+                });
+
+                // Reset dropdown text if no categories match
+                if ($('.category-select-link:visible').length === 0) {
+                     $('#categoryDropdownButton span').text('No matches found');
+                } else {
+                    $(window).scroll(); // Trigger scroll to update active text
+                }
+            });
         });
     </script>
 }
@@ -261,4 +373,141 @@
         z-index: 9999 !important;
     }
 
+
+    .category-nav-container {
+        position: sticky;
+        top: 56px; /* Adjust based on navbar height */
+        z-index: 1020;
+        background-color: var(--bg-color);
+        margin-top: -1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.3) !important;
+    }
+
+    .bg-white-10 {
+        background-color: var(--bs-tertiary-bg) !important;
+    }
+
+    #categoryDropdownButton {
+        color: var(--text-color) !important;
+        border: 1px solid rgba(128, 128, 128, 0.2) !important;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    #categoryDropdownButton:hover, #categoryDropdownButton:focus {
+        background-color: rgba(128, 128, 128, 0.1) !important;
+        border-color: var(--primary-color) !important;
+    }
+
+    #categoryDropdownButton::after {
+        margin-left: 0.5rem;
+    }
+
+    .dropdown-menu {
+        border-radius: 12px;
+        padding: 0.5rem;
+        background-color: var(--card-bg);
+    }
+
+    .category-select-link {
+        border-radius: 8px;
+        color: var(--text-color);
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .category-select-link:hover {
+        background-color: rgba(128, 128, 128, 0.1);
+        color: var(--primary-color);
+    }
+
+    .category-select-link.active {
+        background-color: var(--primary-color) !important;
+        color: #fff !important;
+    }
+
+    .category-select-link.active .badge {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+
+    #productSearch {
+        border-radius: 50px;
+        padding-left: 0.75rem;
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--text-color) !important;
+    }
+
+    #productSearch::placeholder {
+        color: var(--text-color);
+        opacity: 0.5;
+    }
+
+    .category-nav-container .input-group-text {
+        border-radius: 50px 0 0 50px;
+        padding-left: 15px;
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--text-color) !important;
+        opacity: 0.7;
+    }
+
+    /* Target the search icon specifically to ensure it's easy on the eyes */
+    .category-nav-container .bi-search {
+        color: var(--text-color) !important;
+        opacity: 0.4 !important;
+    }
+
+    /* Refine nav border for dark mode */
+    [data-bs-theme="dark"] .category-nav-container {
+        border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .category-scroll-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+
+    .category-scroll-wrapper::-webkit-scrollbar {
+        display: none; /* Hide scrollbar Chrome/Safari */
+    }
+
+    .category-nav-link {
+        color: var(--nav-link);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .category-nav-link:hover {
+        color: var(--nav-link-hover);
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .category-nav-link.active {
+        background-color: var(--nav-text);
+        color: var(--nav-bg) !important;
+    }
+
+    /* Highlight badge in active link */
+    .category-nav-link.active .badge {
+        background-color: var(--nav-bg) !important;
+        color: var(--nav-text) !important;
+    }
+
+    /* Scroll offset for fixed headers */
+    .accordion-item {
+        scroll-margin-top: 120px; /* main navbar + category nav + padding */
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
 </style>
