@@ -130,6 +130,18 @@ $(document).ready(function () {
 
     $('#cart-modal').on('show.bs.modal', function () {
         CartManager.renderCartModal();
+
+        // Close mobile menu if open
+        const navbarCollapse = document.getElementById('mainNavbarCollapse');
+        if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+            if (bsCollapse) {
+                bsCollapse.hide();
+            } else {
+                // Fallback for cases where instance isn't found
+                $(navbarCollapse).collapse('hide');
+            }
+        }
     });
 
     $(document).on('click', '.remove-from-cart', function () {

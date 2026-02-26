@@ -117,3 +117,10 @@ html {
 .pac-item-query {
   color: var(--text-color) !important;
 }
+
+/* Custom Modal Size */
+@media (min-width: 992px) {
+  .modal-70 {
+    --bs-modal-width: 70%;
+  }
+}
