@@ -184,5 +184,33 @@ $(document).ready(function () {
         }
     };
 
+    // Checkout Form logic (migrated from Groceries.cshtml)
+    $('#checkout-form').submit(function (e) {
+        const cart = CartManager.getCart();
+        let container = $('#cart-data-container');
+        container.empty();
+        let index = 0;
+        for (let id in cart) {
+            container.append(`<input type="hidden" name="Items[${index}].ProductId" value="${id}" />`);
+            container.append(`<input type="hidden" name="Items[${index}].Quantity" value="${cart[id].qty}" />`);
+            index++;
+        }
+    });
+
+    // Phone number auto-formatting (US: (XXX) XXX-XXXX)
+    $('#PhoneNumber').on('input', function (e) {
+        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+    });
+
+    // Initialize Google Autocomplete if element exists
+    if (typeof google !== 'undefined') {
+        const input = document.getElementById("DeliveryAddress");
+        if (input) {
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.setFields(["address_components", "formatted_address"]);
+        }
+    }
+
     themeManager.init();
 });

@@ -123,55 +123,10 @@
     </div>
 </div>
 
-<!-- Checkout Modal -->
-<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-70">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Complete Your Order</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form asp-controller="Orders" asp-action="Checkout" method="post" id="checkout-form">
-                <div class="modal-body">
-                    <div class="alert alert-success">You can pay cash or zelle to Pinki Basra 980.370.1091</div>
-                    <p class="opacity-75">Enter your details to receive your unique Order ID.</p>
-                    <div class="mb-3">
-                        <label for="CustomerEmail" class="form-label">Email Address</label>
-                        <input type="email" name="CustomerEmail" id="CustomerEmail" class="form-control" required placeholder="name@example.com">
-                    </div>
-                    <div class="mb-3">
-                        <label for="PhoneNumber" class="form-label">Phone Number (US Format)</label>
-                        <input type="tel" name="PhoneNumber" id="PhoneNumber" class="form-control" required 
-                               placeholder="(555) 555-5555" 
-                               pattern="^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$"
-                               title="Please enter a valid US phone number (e.g. (555) 555-5555 or 555-555-5555)">
-                    </div>
-                    <div class="mb-3">
-                        <label for="DeliveryAddress" class="form-label">Delivery Address</label>
-                        <input type="text" name="DeliveryAddress" id="DeliveryAddress" class="form-control" required placeholder="Start typing your address...">
-                    </div>
-                    <div id="cart-data-container"></div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Keep Shopping</button>
-                    <button type="submit" class="btn btn-primary px-4">Place Order</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Initialize Google Autocomplete
-            if (typeof google !== 'undefined') {
-                const input = document.getElementById("DeliveryAddress");
-                if (input) {
-                    const autocomplete = new google.maps.places.Autocomplete(input);
-                    autocomplete.setFields(["address_components", "formatted_address"]);
-                }
-            }
 
             function syncDisplay() {
                 const cart = CartManager.getCart();
@@ -229,23 +184,6 @@
                 CartManager.removeItem(id);
             });
 
-            $('#checkout-form').submit(function (e) {
-                const cart = CartManager.getCart();
-                let container = $('#cart-data-container');
-                container.empty();
-                let index = 0;
-                for (let id in cart) {
-                    container.append(`<input type="hidden" name="Items[${index}].ProductId" value="${id}" />`);
-                    container.append(`<input type="hidden" name="Items[${index}].Quantity" value="${cart[id].qty}" />`);
-                    index++;
-                }
-            });
-
-            // Phone number auto-formatting (US: (XXX) XXX-XXXX)
-            $('#PhoneNumber').on('input', function (e) {
-                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-                e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-            });
 
             // Active category highlighting on scroll + update dropdown text
             $(window).scroll(function() {
