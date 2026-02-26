@@ -17,14 +17,15 @@ public class HomeController : Controller
         _context = context;
     }
 
-    [Route("Home")]
+    [Route("")]
+    [Route("Home/Index")]
     public async Task<IActionResult> Index()
     {   
         await Task.Yield(); // Simulate async work
         return View();
     }
 
-    
+    [Route("Groceries")]
     public async Task<IActionResult> Groceries()
     {
         var categories = await _context.Categories
