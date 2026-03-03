@@ -13,6 +13,7 @@ namespace EcommerceStore.Services
         public string SenderEmail { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string BaseUrl { get; set; } = string.Empty;
     }
 
     public class EmailService : IEmailService
@@ -49,8 +50,15 @@ namespace EcommerceStore.Services
                         </div>
 
                         <p style='font-style: italic; color: #6c757d; font-size: 0.9em;'>
-                            You can manage, edit, or cancel your order within the next 12 hours using this ID on our website.
+                            You can manage, edit, or cancel your order within the next 12 hours using the link below:
                         </p>
+
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{_settings.BaseUrl}/Orders/Manage/{order.UniqueOrderId}' 
+                               style='background-color: #0d6efd; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>
+                               Manage Your Order
+                            </a>
+                        </div>
 
                         <div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;'>
                             <p style='margin: 0; font-weight: bold;'>Delhi Kitchen</p>

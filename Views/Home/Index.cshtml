@@ -77,8 +77,11 @@
     /* Gentle “candle glow” shimmer */
     .glow {
         position: absolute;
-        width: 520px;
-        height: 520px;
+        width: min(80vw, 520px);
+        height: min(80vw, 520px);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
         border-radius: 50%;
         background: radial-gradient(circle, rgba(215,181,109,0.14), transparent 60%);
         filter: blur(10px);
@@ -89,12 +92,20 @@
 
     @@keyframes drift {
         0%, 100% {
-            transform: translate(-10px, -8px) scale(1);
+            transform: translate(-50%, -50%) translate(-10px, -8px) scale(1);
         }
 
         50% {
-            transform: translate(14px, 10px) scale(1.03);
+            transform: translate(-50%, -50%) translate(14px, 10px) scale(1.03);
         }
+    }
+
+    /* Decorative container to prevent overflow */
+    .hero-decor-wrap {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding-bottom: 2rem;
     }
 
     /* Respect reduced motion */
@@ -117,12 +128,14 @@
     }
 </style>
 
-<div class="glow" aria-hidden="true"></div>
+<div class="hero-decor-wrap">
+    <div class="glow" aria-hidden="true"></div>
 
-<div class="wrap" id="wrap">
-    <h1 class="title">Delhi Kitchen</h1>
-    <div class="rule"></div>
-    <p class="tagline">Cloud Kitchen • Since 2026</p>
+    <div class="wrap" id="wrap">
+        <h1 class="title">Delhi Kitchen</h1>
+        <div class="rule"></div>
+        <p class="tagline">Cloud Kitchen • Since 2026</p>
+    </div>
 </div>
 
 <script>
