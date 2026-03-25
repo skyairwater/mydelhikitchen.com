@@ -1,0 +1,122 @@
+@model IEnumerable<EcommerceStore.Models.CustomerFoodOrder>
+@{
+    var adminOrder = ViewBag.AdminOrder as EcommerceStore.Models.AdminFoodOrder;
+    ViewData["Title"] = "Customer Orders for #" + (adminOrder?.Id ?? 0);
+}
+
+<div class="mt-4 mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index">Food Orders</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Customers for Menu #@(adminOrder?.Id)</li>
+      </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="bi bi-people-fill text-primary me-2"></i> Customer Orders</h2>
+            @if (adminOrder != null)
+            {
+                <div class="text-muted small">
+                    <span class="badge bg-dark">Menu Date: @adminOrder.DeliveryDate.ToString("yyyy-MM-dd")</span>
+                </div>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            @if (Model != null && Model.Any())
+            {
+                <button type="button" id="copyAddressesBtn" class="btn btn-primary d-flex align-items-center shadow-sm">
+                    <i class="bi bi-clipboard-plus me-2"></i> Copy all addresses
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive shadow-sm rounded-3">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Order ID</th>
+                <th>Customer Detail</th>
+                <th>Phone Number</th>
+                <th>Delivery Address</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th>Order Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var order in Model)
+                {
+                    <tr>
+                        <td class="fw-bold text-primary">@order.UniqueOrderId</td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">@order.CustomerEmail</span>
+                            </div>
+                        </td>
+                        <td>@order.PhoneNumber</td>
+                        <td style="max-width: 250px;" class="text-truncate customer-address" title="@order.DeliveryAddress">
+                            @order.DeliveryAddress
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@order.MainQuantity</span>
+                        </td>
+                        <td class="fw-bold">@order.TotalAmount.ToString("C")</td>
+                        <td class="small text-muted">@order.OrderDate.ToLocalTime().ToString("g")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="bi bi-info-circle fs-4 mb-2 d-block"></i>
+                        No customer orders placed for this menu yet.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4 pb-5">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to All Menus
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('copyAddressesBtn')?.addEventListener('click', function() {
+            const addresses = Array.from(document.querySelectorAll('.customer-address'))
+                                   .map(el => el.getAttribute('title') || el.innerText.trim())
+                                   .filter(addr => addr !== '');
+            
+            const copyContent = addresses.join('\n');
+            
+            if (copyContent) {
+                const btn = this;
+                const originalHtml = btn.innerHTML;
+                
+                navigator.clipboard.writeText(copyContent).then(() => {
+                    btn.innerHTML = '<i class="bi bi-check2-circle me-2"></i> Copied!';
+                    btn.classList.replace('btn-primary', 'btn-success');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                        btn.classList.replace('btn-success', 'btn-primary');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy addresses: ', err);
+                    alert('Failed to copy to clipboard.');
+                });
+            } else {
+                alert('No addresses found to copy.');
+            }
+        });
+    </script>
+}

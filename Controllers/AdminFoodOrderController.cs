@@ -28,10 +28,34 @@ namespace EcommerceStore.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var orders = await _context.AdminFoodOrders
+            var adminOrders = await _context.AdminFoodOrders
                 .Include(o => o.Items)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();
+
+            // Fetch counts of customer orders for each admin order
+            var counts = await _context.CustomerFoodOrders
+                .GroupBy(o => o.AdminFoodOrderId)
+                .Select(g => new { Id = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Id, x => x.Count);
+
+            ViewBag.CustomerOrderCounts = counts;
+
+            return View(adminOrders);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CustomerOrders(int id)
+        {
+            var adminOrder = await _context.AdminFoodOrders.FindAsync(id);
+            if (adminOrder == null) return NotFound();
+
+            var orders = await _context.CustomerFoodOrders
+                .Where(o => o.AdminFoodOrderId == id)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            ViewBag.AdminOrder = adminOrder;
             return View(orders);
         }
 

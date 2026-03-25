@@ -1,5 +1,6 @@
 using EcommerceStore.Data;
 using EcommerceStore.Models;
+using EcommerceStore.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -11,10 +12,12 @@ namespace EcommerceStore.Controllers
     public class FoodController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public FoodController(ApplicationDbContext context)
+        public FoodController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpGet("")]
@@ -106,6 +109,18 @@ namespace EcommerceStore.Controllers
                 _context.CustomerFoodOrders.Add(customerOrder);
                 await _context.SaveChangesAsync();
                 
+                // Send Email Notification
+                try
+                {
+                    await _emailService.SendFoodOrderConfirmationEmailAsync(customerOrder);
+                    System.Diagnostics.Debug.WriteLine($"Food Order Email sent to {customerOrder.CustomerEmail} with Order ID: {customerOrder.UniqueOrderId}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to send food order email: {ex.Message}");
+                    // We don't want to fail the checkout if email sending fails
+                }
+
                 TempData["Message"] = "Food Order placed successfully!";
                 return RedirectToAction(nameof(Confirmation), new { id = customerOrder.UniqueOrderId });
             }

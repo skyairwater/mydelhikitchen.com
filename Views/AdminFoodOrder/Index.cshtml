@@ -26,6 +26,7 @@
                 <th>Created At</th>
                 <th>Price</th>
                 <th>Items Count</th>
+                <th>Total Orders</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -40,6 +41,13 @@
                     <td>@order.Price.ToString("C")</td>
                     <td>@order.Items.Count</td>
                     <td>
+                        @{
+                            var counts = ViewBag.CustomerOrderCounts as Dictionary<int, int>;
+                            var count = counts != null && counts.ContainsKey(order.Id) ? counts[order.Id] : 0;
+                        }
+                        <span class="badge @(count > 0 ? "bg-primary" : "bg-secondary") rounded-pill px-3">@count</span>
+                    </td>
+                    <td>
                         @if (order.IsCancelled)
                         {
                             <span class="badge bg-danger">Cancelled</span>
@@ -51,7 +59,10 @@
                     </td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="CustomerOrders" asp-route-id="@order.Id" class="btn btn-sm btn-info text-white" title="View Customers">
+                                <i class="bi bi-people-fill me-1"></i> Customers
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary" style="margin-left: 5px;">Edit</a>
                             @if (!order.IsCancelled)
                             {
                                 <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this order?');">
