@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using EcommerceStore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcommerceStore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325010820_AddIsCancelledToAdminFoodOrders")]
+    partial class AddIsCancelledToAdminFoodOrders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,90 +174,6 @@ namespace EcommerceStore.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("EcommerceStore.Models.CustomerFoodOrder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AdminFoodOrderId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("BasePrice")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("CustomerEmail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("DeliveryAddress")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("DeliveryCharge")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("MainQuantity")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("UniqueOrderId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdminFoodOrderId");
-
-                    b.ToTable("CustomerFoodOrders");
-                });
-
-            modelBuilder.Entity("EcommerceStore.Models.CustomerFoodOrderItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AdminFoodOrderItemId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CustomerFoodOrderId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerFoodOrderId");
-
-                    b.ToTable("CustomerFoodOrderItems");
                 });
 
             modelBuilder.Entity("EcommerceStore.Models.Order", b =>
@@ -513,28 +432,6 @@ namespace EcommerceStore.Migrations
                     b.Navigation("AdminFoodOrder");
                 });
 
-            modelBuilder.Entity("EcommerceStore.Models.CustomerFoodOrder", b =>
-                {
-                    b.HasOne("EcommerceStore.Models.AdminFoodOrder", "AdminFoodOrder")
-                        .WithMany()
-                        .HasForeignKey("AdminFoodOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AdminFoodOrder");
-                });
-
-            modelBuilder.Entity("EcommerceStore.Models.CustomerFoodOrderItem", b =>
-                {
-                    b.HasOne("EcommerceStore.Models.CustomerFoodOrder", "CustomerFoodOrder")
-                        .WithMany("AlaCarteItems")
-                        .HasForeignKey("CustomerFoodOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CustomerFoodOrder");
-                });
-
             modelBuilder.Entity("EcommerceStore.Models.OrderItem", b =>
                 {
                     b.HasOne("EcommerceStore.Models.Order", "Order")
@@ -624,11 +521,6 @@ namespace EcommerceStore.Migrations
             modelBuilder.Entity("EcommerceStore.Models.Category", b =>
                 {
                     b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("EcommerceStore.Models.CustomerFoodOrder", b =>
-                {
-                    b.Navigation("AlaCarteItems");
                 });
 
             modelBuilder.Entity("EcommerceStore.Models.Order", b =>

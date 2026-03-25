@@ -34,13 +34,6 @@ public class HomeController : Controller
         return View(categories);
     }
 
-    [Route("Food")]
-    public async Task<IActionResult> Food()
-    {
-        await Task.Yield(); // Simulate async work
-        return View();
-    }
-
     [Route("Catering")]
     public async Task<IActionResult> Catering()
     {

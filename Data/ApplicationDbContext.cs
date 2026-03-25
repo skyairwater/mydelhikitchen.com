@@ -12,4 +12,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<AdminFoodOrder> AdminFoodOrders { get; set; }
     public DbSet<AdminFoodOrderItem> AdminFoodOrderItems { get; set; }
+    public DbSet<CustomerFoodOrder> CustomerFoodOrders { get; set; }
+    public DbSet<CustomerFoodOrderItem> CustomerFoodOrderItems { get; set; }
 }

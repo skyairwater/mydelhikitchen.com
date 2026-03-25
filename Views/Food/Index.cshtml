@@ -1,0 +1,338 @@
+@model EcommerceStore.Models.AdminFoodOrder
+
+@{
+    ViewData["Title"] = "Today's Food Menu";
+}
+
+<div class="container mt-5 mb-5 pb-5">
+    @if (Model == null)
+    {
+        <div class="text-center py-5 my-5">
+            <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
+            <h2 class="text-muted mt-3 fw-bold">No Active Food Orders</h2>
+            <p class="fs-5 text-secondary">Come back later for delicious catering options!</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-5">
+            <!-- Left Column: Menu Description & Photos -->
+            <div class="col-lg-7 pb-4">
+                <div class="d-flex align-items-center mb-4 flex-wrap gap-2">
+                    <span class="badge bg-primary text-white rounded-pill fs-6 px-4 py-2 shadow-sm border border-primary-subtle">
+                        <i class="bi bi-calendar-check me-2"></i> Delivery Date: @Model.DeliveryDate.ToString("MMMM dd, yyyy")
+                    </span>
+                    @if (Model.MaxOrders.HasValue)
+                    {
+                        <span class="badge bg-warning text-dark rounded-pill fs-6 px-4 py-2 shadow-sm border border-warning-subtle">
+                            <i class="bi bi-people-fill me-2"></i> Max Orders: @Model.MaxOrders
+                        </span>
+                        @if (ViewBag.RemainingOrders != null)
+                        {
+                            var remaining = (int)ViewBag.RemainingOrders;
+                            var remainingClass = remaining > 5 ? "bg-info border-info-subtle" : "bg-danger text-white border-danger";
+                            <span class="badge @remainingClass rounded-pill fs-6 px-4 py-2 shadow-sm border">
+                                <i class="bi bi-hourglass-split me-2"></i> Remaining Orders: @Math.Max(0, remaining)
+                            </span>
+                        }
+                    }
+                </div>
+
+                <!-- Beautiful CSS Card for Menu -->
+                <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+                    <div class="card-header bg-gradient bg-dark text-white p-4 border-0 shadow-sm z-1 position-relative">
+                        <h3 class="card-title mb-0 fw-bold"><i class="bi bi-card-list me-2 text-warning"></i> Today's Special Menu</h3>
+                    </div>
+                    <div class="card-body p-4 bg-white position-relative">
+                        <div class="menu-content" style="font-size: 1.1rem; line-height: 1.8;">
+                            @if (!string.IsNullOrWhiteSpace(Model.Menu))
+                            {
+                                @Html.Raw(Model.Menu)
+                            }
+                            else
+                            {
+                                <p class="text-muted fst-italic">No menu description provided by the chef.</p>
+                            }
+                        </div>
+                        
+                        @if (Model.Items != null && Model.Items.Any())
+                        {
+                            <hr class="my-4 border-secondary opacity-25" />
+                            <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-basket2-fill me-2"></i>A la Carte Selection</h5>
+                            <ul class="list-group list-group-flush rounded-3 border">
+                                @foreach(var item in Model.Items)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light py-3 border-bottom ala-carte-item" data-id="@item.Id" data-name="@item.Name" data-price="@(item.Price ?? 0)">
+                                        <div>
+                                            <span class="fw-semibold text-dark fs-5">@item.Name</span>
+                                            @if(item.Price.HasValue)
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill fs-6 px-3 ms-2 ala-carte-price">
+                                                    @item.Price.Value.ToString("C")
+                                                </span>
+                                            }
+                                        </div>
+                                        <div style="width: 120px;">
+                                            <div class="input-group input-group-sm">
+                                                <button class="btn btn-outline-secondary btn-minus" type="button"><i class="bi bi-dash"></i></button>
+                                                <input type="number" class="form-control text-center ala-carte-qty" value="0" min="0" readonly style="background-color: white;" name="AlaCarte[@item.Id]" />
+                                                <button class="btn btn-outline-secondary btn-plus" type="button"><i class="bi bi-plus"></i></button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <!-- Carousel for Images -->
+                @if (Model.PhotoPaths != null && Model.PhotoPaths.Any())
+                {
+                    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                        <div id="foodCarousel" class="carousel slide carousel-fade shadow-sm" data-bs-ride="carousel">
+                            @if (Model.PhotoPaths.Count > 1)
+                            {
+                                <div class="carousel-indicators mb-2">
+                                    @for (int i = 0; i < Model.PhotoPaths.Count; i++)
+                                    {
+                                        <button type="button" data-bs-target="#foodCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+                                    }
+                                </div>
+                            }
+                            <div class="carousel-inner bg-dark">
+                                @for (int i = 0; i < Model.PhotoPaths.Count; i++)
+                                {
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <img src="@Model.PhotoPaths[i]" class="d-block w-100" alt="Food preview @(i+1)" style="object-fit: contain; max-height: 450px; width: 100%;" />
+                                    </div>
+                                }
+                            </div>
+                            @if (Model.PhotoPaths.Count > 1)
+                            {
+                                <button class="carousel-control-prev" type="button" data-bs-target="#foodCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon p-3 bg-dark bg-opacity-50 rounded-circle shadow" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#foodCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon p-3 bg-dark bg-opacity-50 rounded-circle shadow" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Right Column: Order Form & Pricing Details -->
+            <div class="col-lg-5">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden sticky-top" style="top: 80px;">
+                    <div class="card-header bg-primary text-white p-4 border-0 text-center">
+                        <h4 class="fw-bold mb-0">Place your Order</h4>
+                    </div>
+                    <div class="card-body p-4 p-md-5 bg-white">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2">
+                            <span class="text-secondary fs-5 fw-semibold">Base Price</span>
+                            <span class="fs-5 fw-bold text-dark" id="basePriceDisplay" data-base-price="@Model.Price">@Model.Price.ToString("C") <span class="text-muted fs-6 fw-normal">/ unit</span></span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <span class="text-secondary fs-5 fw-semibold">Delivery Charge</span>
+                            <span class="fs-5 fw-bold text-success" id="deliveryChargeDisplay" data-delivery="@Model.DeliveryCharge">@Model.DeliveryCharge.ToString("C")</span>
+                        </div>
+
+                        <div id="alaCarteSummaryContainer" class="mb-3 d-none">
+                            <h6 class="fw-bold text-secondary mb-2">A la Carte Add-ons</h6>
+                            <div id="alaCarteSummaryList" class="small mb-3 border-bottom pb-2">
+                                <!-- Dynamic items will be injected here -->
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center border-top border-2 pt-3 mb-4">
+                            <span class="text-dark fs-4 fw-bold">Total Estimate</span>
+                            <span class="fs-3 fw-bold text-primary" id="grandTotalDisplay">@((Model.Price * 2 + Model.DeliveryCharge).ToString("C"))</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Comments))
+                        {
+                            <div class="alert bg-info bg-opacity-10 border border-info border-opacity-25 rounded-3 mb-4 p-4 text-dark shadow-sm">
+                                <h6 class="alert-heading fw-bold text-info-emphasis mb-2"><i class="bi bi-chat-quote-fill me-2"></i>Chef's Note</h6>
+                                <p class="mb-0 fs-6" style="line-height: 1.6;">@Model.Comments</p>
+                            </div>
+                        }
+
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @TempData["Error"]
+                            </div>
+                        }
+                        @if (TempData["Message"] != null)
+                        {
+                            <div class="alert alert-success" role="alert">
+                                @TempData["Message"]
+                            </div>
+                        }
+
+                        <div class="mt-2 text-start">
+                            <div class="mb-4">
+                                <label for="quantity" class="form-label fw-bold fs-5 text-dark mb-3">Order Quantity</label>
+                                <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden">
+                                    <span class="input-group-text bg-light text-primary border-secondary-subtle px-4"><i class="bi bi-cart-plus-fill fs-5"></i></span>
+                                    <input type="number" id="quantity" class="form-control border-secondary-subtle fs-5 text-center fw-bold" min="2" value="2" required />
+                                </div>
+                                <div class="form-text mt-3 text-warning-emphasis fw-semibold bg-warning bg-opacity-10 rounded-2 p-2 px-3 border border-warning-subtle text-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Minimum order quantity is 2.
+                                </div>
+                            </div>
+
+                            @if (ViewBag.RemainingOrders != null && (int)ViewBag.RemainingOrders <= 0)
+                            {
+                                <div class="alert alert-danger fw-bold text-center mt-3 p-3 rounded-pill shadow-sm">
+                                    <i class="bi bi-x-circle-fill me-2"></i> SOLD OUT
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-lg w-100 shadow rounded-pill fw-bold fs-5 py-3 mt-2 text-uppercase tracking-wider" disabled>
+                                    Sold Out <i class="bi bi-slash-circle ms-1 fs-4 align-middle"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary btn-lg w-100 shadow rounded-pill fw-bold fs-5 py-3 mt-3 text-uppercase tracking-wider transition-all" id="btnOrderNow">
+                                    Proceed to Order <i class="bi bi-arrow-right-short ms-1 fs-4 align-middle"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model != null)
+{
+    <!-- Using Global Modal from _Layout.cshtml -->
+}
+
+<style>
+    .menu-content ul { padding-left: 2rem; }
+    .menu-content li { margin-bottom: 0.5rem; }
+    #btnOrderNow:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(13,110,253,.2)!important; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .transition-all { transition: all 0.3s ease; }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const basePrice = parseFloat(document.getElementById('basePriceDisplay').getAttribute('data-base-price')) || 0;
+            const deliveryCharge = parseFloat(document.getElementById('deliveryChargeDisplay').getAttribute('data-delivery')) || 0;
+            const mainQtyInput = document.getElementById('quantity');
+            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+            const alaCarteSummaryContainer = document.getElementById('alaCarteSummaryContainer');
+            const alaCarteSummaryList = document.getElementById('alaCarteSummaryList');
+
+            function getCurrencyFormat(amount) {
+                return '$' + amount.toFixed(2);
+            }
+
+            function recalculateTotals() {
+                let mainQty = parseInt(mainQtyInput.value);
+                if (isNaN(mainQty) || mainQty < 2) mainQty = 2;
+
+                let mainTotal = basePrice * mainQty;
+                let alaCarteTotal = 0;
+                let hasAlaCarte = false;
+
+                alaCarteSummaryList.innerHTML = '';
+
+                document.querySelectorAll('.ala-carte-item').forEach(function(itemRow) {
+                    const qtyInput = itemRow.querySelector('.ala-carte-qty');
+                    const qty = parseInt(qtyInput.value) || 0;
+                    
+                    if (qty > 0) {
+                        hasAlaCarte = true;
+                        const name = itemRow.getAttribute('data-name');
+                        const price = parseFloat(itemRow.getAttribute('data-price')) || 0;
+                        const lineTotal = price * qty;
+                        alaCarteTotal += lineTotal;
+
+                        // Add to summary list
+                        const lineElem = document.createElement('div');
+                        lineElem.className = 'd-flex justify-content-between text-muted mb-1';
+                        lineElem.innerHTML = `<span>${qty}x ${name}</span><span>${getCurrencyFormat(lineTotal)}</span>`;
+                        alaCarteSummaryList.appendChild(lineElem);
+                    }
+                });
+
+                if (hasAlaCarte) {
+                    alaCarteSummaryContainer.classList.remove('d-none');
+                } else {
+                    alaCarteSummaryContainer.classList.add('d-none');
+                }
+
+                const grandTotal = mainTotal + deliveryCharge + alaCarteTotal;
+                grandTotalDisplay.innerText = getCurrencyFormat(grandTotal);
+            }
+
+            mainQtyInput.addEventListener('input', recalculateTotals);
+            mainQtyInput.addEventListener('change', recalculateTotals);
+
+            document.querySelectorAll('.btn-plus').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('.ala-carte-qty');
+                    input.value = parseInt(input.value) + 1;
+                    recalculateTotals();
+                });
+            });
+
+            document.querySelectorAll('.btn-minus').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('.ala-carte-qty');
+                    let val = parseInt(input.value);
+                    if (val > 0) {
+                        input.value = val - 1;
+                        recalculateTotals();
+                    }
+                });
+            });
+            
+            // Map payloads to global modal automatically
+            document.getElementById('btnOrderNow').addEventListener('click', function(e) {
+                // Prepare global checkout form
+                const checkoutForm = document.getElementById('checkout-form');
+                checkoutForm.action = '/Food/Checkout';
+
+                const cartContainer = document.getElementById('cart-data-container');
+                cartContainer.innerHTML = ''; // reset completely
+                
+                // Formulate main quantities
+                const adminOrderId = '@Model.Id';
+                const mainQty = parseInt(mainQtyInput.value) || 2;
+                
+                cartContainer.innerHTML += `<input type="hidden" name="AdminFoodOrderId" value="${adminOrderId}" />`;
+                cartContainer.innerHTML += `<input type="hidden" name="MainQuantity" value="${mainQty}" />`;
+                
+                document.querySelectorAll('.ala-carte-item').forEach(function(itemRow) {
+                    const id = itemRow.getAttribute('data-id');
+                    const qty = parseInt(itemRow.querySelector('.ala-carte-qty').value) || 0;
+                    if (qty > 0) {
+                        cartContainer.innerHTML += `<input type="hidden" name="AlaCarteQuantities[${id}]" value="${qty}" />`;
+                    }
+                });
+                
+                // Update styling texts inside global modal to show it's food prep
+                const checkoutModalElem = document.getElementById('checkoutModal');
+                const titleElem = checkoutModalElem.querySelector('.modal-title');
+                if(titleElem) titleElem.innerText = 'Complete Food Order';
+                
+                // Show the modal explicitly
+                const checkoutModal = new bootstrap.Modal(checkoutModalElem);
+                checkoutModal.show();
+            });
+            
+            recalculateTotals(); // Initial calculation
+        });
+    </script>
+}

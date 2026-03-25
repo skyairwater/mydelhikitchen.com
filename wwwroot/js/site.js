@@ -1,4 +1,4 @@
-﻿const CartManager = {
+const CartManager = {
     cart: {},
 
     init() {
@@ -186,14 +186,17 @@ $(document).ready(function () {
 
     // Checkout Form logic (migrated from Groceries.cshtml)
     $('#checkout-form').submit(function (e) {
-        const cart = CartManager.getCart();
-        let container = $('#cart-data-container');
-        container.empty();
-        let index = 0;
-        for (let id in cart) {
-            container.append(`<input type="hidden" name="Items[${index}].ProductId" value="${id}" />`);
-            container.append(`<input type="hidden" name="Items[${index}].Quantity" value="${cart[id].qty}" />`);
-            index++;
+        // Only run CartManager logic if this is a Grocery checkout
+        if ($(this).attr('action') && $(this).attr('action').toLowerCase().indexOf('/orders/checkout') !== -1) {
+            const cart = CartManager.getCart();
+            let container = $('#cart-data-container');
+            container.empty();
+            let index = 0;
+            for (let id in cart) {
+                container.append(`<input type="hidden" name="Items[${index}].ProductId" value="${id}" />`);
+                container.append(`<input type="hidden" name="Items[${index}].Quantity" value="${cart[id].qty}" />`);
+                index++;
+            }
         }
     });
 

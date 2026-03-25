@@ -15,5 +15,6 @@ namespace EcommerceStore.Models
         public List<string> PhotoPaths { get; set; } = new List<string>();
         public List<AdminFoodOrderItem> Items { get; set; } = new List<AdminFoodOrderItem>();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsCancelled { get; set; } = false;
     }
 }

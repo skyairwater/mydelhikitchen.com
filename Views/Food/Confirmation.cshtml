@@ -1,0 +1,105 @@
+@model EcommerceStore.Models.CustomerFoodOrder
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container mt-5 mb-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-success text-white p-4 text-center border-0">
+                    <i class="bi bi-check-circle-fill text-white opacity-75 mb-3" style="font-size: 4rem;"></i>
+                    <h2 class="fw-bold mb-0">Order Confirmed!</h2>
+                    <p class="mb-0 mt-2 fs-5 opacity-75">Thank you for your order, @Model.CustomerEmail.</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <div class="row mb-5 border-bottom pb-4">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                            <h6 class="text-muted text-uppercase fw-bold mb-2">Order Reference</h6>
+                            <span class="badge bg-light text-dark fs-5 font-monospace border">@Model.UniqueOrderId</span>
+                        </div>
+                        <div class="col-sm-6 text-sm-end">
+                            <h6 class="text-muted text-uppercase fw-bold mb-2">Order Date</h6>
+                            <p class="fs-5 fw-semibold mb-0">@Model.OrderDate.ToString("MMM dd, yyyy h:mm tt")</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h4 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="bi bi-truck me-2 text-primary"></i>Delivery Details</h4>
+                        
+                        <div class="row g-3">
+                            <div class="col-sm-4 text-muted fw-semibold">Delivery Address:</div>
+                            <div class="col-sm-8 fw-bold">@Model.DeliveryAddress</div>
+
+                            <div class="col-sm-4 text-muted fw-semibold">Phone:</div>
+                            <div class="col-sm-8 fw-bold">@Model.PhoneNumber</div>
+
+                            @if(Model.AdminFoodOrder != null)
+                            {
+                                <div class="col-sm-4 text-muted fw-semibold">Expected Date:</div>
+                                <div class="col-sm-8 fw-bold text-success">@Model.AdminFoodOrder.DeliveryDate.ToString("MMMM dd, yyyy")</div>
+                            }
+                        </div>
+                    </div>
+
+                    @if(Model.AdminFoodOrder != null && !string.IsNullOrWhiteSpace(Model.AdminFoodOrder.Comments))
+                    {
+                        <div class="alert bg-warning bg-opacity-10 border border-warning-subtle rounded-3 p-4 mb-5">
+                            <h6 class="alert-heading fw-bold text-warning-emphasis mb-2"><i class="bi bi-chat-quote-fill me-2"></i>Chef's Note for this Menu</h6>
+                            <p class="mb-0 text-dark">@Model.AdminFoodOrder.Comments</p>
+                        </div>
+                    }
+
+                    <div>
+                        <h4 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="bi bi-receipt me-2 text-primary"></i>Order Summary</h4>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="fw-semibold text-dark fs-5">Main Meal Package</span>
+                                <div class="text-muted small">@Model.MainQuantity persons &times; @Model.BasePrice.ToString("C")</div>
+                            </div>
+                            <span class="fs-5 fw-semibold">@((Model.BasePrice * Model.MainQuantity).ToString("C"))</span>
+                        </div>
+
+                        @if (Model.AlaCarteItems != null && Model.AlaCarteItems.Any())
+                        {
+                            <hr class="text-muted opacity-25 my-3" />
+                            <h6 class="text-muted text-uppercase fw-bold mb-3 small">A la Carte Add-ons</h6>
+                            
+                            @foreach (var item in Model.AlaCarteItems)
+                            {
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-dark">
+                                        <span class="badge bg-secondary rounded-pill me-2">@item.Quantity x</span>
+                                        @item.Name
+                                    </div>
+                                    <span class="text-dark">@((item.Price * item.Quantity).ToString("C"))</span>
+                                </div>
+                            }
+                        }
+
+                        <hr class="my-4" />
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted fw-semibold">Delivery Charge</span>
+                            <span class="fs-5 text-dark">@Model.DeliveryCharge.ToString("C")</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center bg-light p-4 rounded-3 border mt-4">
+                            <span class="text-dark fs-4 fw-bold">Total Paid</span>
+                            <span class="fs-3 fw-bold text-primary">@Model.TotalAmount.ToString("C")</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5 pt-3">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">
+                            Return to Homepage
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
