@@ -33,56 +33,67 @@
         <nav class="navbar navbar-expand-md border-bottom box-shadow mb-3 fixed-top shadow-sm">
             <div class="container-fluid">
                 <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Delhi Kitchen</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarCollapse" aria-controls="mainNavbarCollapse"
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNavbarOffcanvas" aria-controls="mainNavbarOffcanvas"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-md-inline-flex justify-content-between" id="mainNavbarCollapse">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Groceries">Groceries</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Food" asp-action="Index">Food</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Catering">Catering</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
-                        </li>
-                        @if (User.HasClaim("IsAdmin", "True"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="AdminFoodOrder" asp-action="Create">Food Order</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Manage Products</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Categories" asp-action="Index">Manage Categories</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Orders" asp-action="AdminIndex">Manage Orders</a>
-                            </li>
-                        }
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <div class="d-flex align-items-center me-3 border-end pe-3">
-                        <button class="btn btn-link nav-link px-2 me-2" id="theme-toggle" title="Toggle Theme" style="color: inherit;">
-                            <i class="bi bi-sun-fill" id="theme-icon-light"></i>
-                            <i class="bi bi-moon-stars-fill" id="theme-icon-dark" style="display:none;"></i>
-                        </button>
-                        <button class="btn btn-outline-light position-relative p-1 px-2 border-0" data-bs-toggle="modal" data-bs-target="#cart-modal" id="cart-btn" style="color: inherit; border-color: currentColor !important;">
-                            <i class="bi bi-cart3 fs-4"></i>
-                            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-                                0
-                            </span>
-                        </button>
+                <div class="offcanvas offcanvas-start" tabindex="-1" id="mainNavbarOffcanvas" aria-labelledby="mainNavbarOffcanvasLabel">
+                    <div class="offcanvas-header border-bottom d-md-none">
+                        <h5 class="offcanvas-title fw-bold" id="mainNavbarOffcanvasLabel">Delhi Kitchen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                     </div>
-                    <partial name="_LoginPartial" />
+                    <div class="offcanvas-body py-0">
+                        <div class="navbar-collapse d-md-inline-flex justify-content-between w-100">
+                            <ul class="navbar-nav flex-grow-1">
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Groceries">Groceries</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Food" asp-action="Index">Food</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Catering">Catering</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
+                                </li>
+                                @if (User.HasClaim("IsAdmin", "True"))
+                                {
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Admin
+                                        </a>
+                                        <ul class="dropdown-menu shadow-sm" aria-labelledby="adminDropdown">
+                                            <li><h6 class="dropdown-header">Orders</h6></li>
+                                            <li><a class="dropdown-item py-2 text-dark" asp-area="" asp-controller="AdminFoodOrder" asp-action="Create"><i class="bi bi-plus-circle me-2"></i>New Food Order</a></li>
+                                            <li><a class="dropdown-item py-2 text-dark" asp-area="" asp-controller="AdminFoodOrder" asp-action="Index"><i class="bi bi-list-ul me-2"></i>Show All Food Orders</a></li>
+                                            <li><a class="dropdown-item py-2 text-dark" asp-area="" asp-controller="Orders" asp-action="AdminIndex"><i class="bi bi-cart-check me-2"></i>Show All Grocery Orders</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><h6 class="dropdown-header">Grocery</h6></li>
+                                            <li><a class="dropdown-item py-2 text-dark" asp-area="" asp-controller="Products" asp-action="Index"><i class="bi bi-box me-2"></i>Manage Products</a></li>
+                                            <li><a class="dropdown-item py-2 text-dark" asp-area="" asp-controller="Categories" asp-action="Index"><i class="bi bi-tags me-2"></i>Manage Categories</a></li>
+                                        </ul>
+                                    </li>
+                                }
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                                </li>
+                            </ul>
+                            <div class="d-flex align-items-center me-md-3 border-end-md pe-md-3 mb-3 mb-md-0">
+                                <button class="btn btn-link nav-link px-2 me-2" id="theme-toggle" title="Toggle Theme" style="color: inherit;">
+                                    <i class="bi bi-sun-fill" id="theme-icon-light"></i>
+                                    <i class="bi bi-moon-stars-fill" id="theme-icon-dark" style="display:none;"></i>
+                                </button>
+                                <button class="btn btn-outline-light position-relative p-1 px-2 border-0" data-bs-toggle="modal" data-bs-target="#cart-modal" id="cart-btn" style="color: inherit; border-color: currentColor !important;">
+                                    <i class="bi bi-cart3 fs-4"></i>
+                                    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                        0
+                                    </span>
+                                </button>
+                            </div>
+                            <partial name="_LoginPartial" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>

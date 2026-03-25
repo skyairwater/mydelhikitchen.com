@@ -45,6 +45,27 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.offcanvas {
+  background-color: var(--nav-bg) !important;
+  color: var(--nav-text) !important;
+  transition: background-color var(--transition-speed) ease;
+}
+
+.offcanvas .btn-close {
+  filter: var(--bs-theme-white-filter, invert(1) grayscale(100%) brightness(200%));
+}
+
+[data-bs-theme="dark"] .offcanvas .btn-close {
+  filter: none;
+}
+
+@media (min-width: 768px) {
+  .border-end-md {
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+}
+
 .navbar-brand,
 .nav-link {
   color: var(--nav-text) !important;
