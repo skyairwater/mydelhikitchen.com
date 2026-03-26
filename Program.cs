@@ -36,6 +36,8 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
+
 
 var app = builder.Build();
 
@@ -92,6 +94,9 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
    .WithStaticAssets();
+
+app.MapHub<EcommerceStore.Hubs.ViewingHub>("/viewingHub");
+
 
 
 

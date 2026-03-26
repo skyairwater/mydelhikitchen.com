@@ -9,13 +9,16 @@
     {
         <div class="text-center py-5 my-5">
             <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
-            <h2 class="text-muted mt-3 fw-bold">No Active Food Orders</h2>
+            <h2 class="text-muted mt-3 fw-bold">No Food Delievery Menu</h2>
             <p class="fs-5 text-secondary">Come back later for delicious catering options!</p>
         </div>
     }
     else
     {
-        <div class="row g-5">
+        <div class="row g-5 position-relative">
+
+
+
             <!-- Left Column: Menu Description & Photos -->
             <div class="col-lg-7 pb-4">
                 <div class="d-flex align-items-center mb-4 flex-wrap gap-2">
@@ -27,8 +30,13 @@
                         <span class="badge bg-warning text-dark rounded-pill fs-6 px-4 py-2 shadow-sm border border-warning-subtle">
                             <i class="bi bi-people-fill me-2"></i> Max Orders: @Model.MaxOrders
                         </span>
+                        <div class="live-viewer-stats rounded-pill border shadow-sm px-4 py-2" id="viewer-badge" style="font-size: 1rem;">
+                            <span class="status-pulse me-2"></span>
+                            <span id="viewer-count">...</span> <span id="viewer-text" class="ms-1">Users watching</span>
+                        </div>
                         @if (ViewBag.RemainingOrders != null)
                         {
+
                             var remaining = (int)ViewBag.RemainingOrders;
                             var remainingClass = remaining > 5 ? "bg-info border-info-subtle" : "bg-danger text-white border-danger";
                             <span class="badge @remainingClass rounded-pill fs-6 px-4 py-2 shadow-sm border">
@@ -227,115 +235,149 @@
 </style>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const basePrice = parseFloat(document.getElementById('basePriceDisplay').getAttribute('data-base-price')) || 0;
-            const deliveryCharge = parseFloat(document.getElementById('deliveryChargeDisplay').getAttribute('data-delivery')) || 0;
-            const mainQtyInput = document.getElementById('quantity');
-            const grandTotalDisplay = document.getElementById('grandTotalDisplay');
-            const alaCarteSummaryContainer = document.getElementById('alaCarteSummaryContainer');
-            const alaCarteSummaryList = document.getElementById('alaCarteSummaryList');
 
-            function getCurrencyFormat(amount) {
-                return '$' + amount.toFixed(2);
+        // SignalR Connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/viewingHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("UpdateViewerCount", (count) => {
+            const countElem = document.getElementById('viewer-count');
+            const textElem = document.getElementById('viewer-text');
+            if (countElem && textElem) {
+                countElem.innerText = count;
+                textElem.innerText = (count === 1) ? "User watching" : "Users watching";
             }
+        });
 
-            function recalculateTotals() {
-                let mainQty = parseInt(mainQtyInput.value);
-                if (isNaN(mainQty) || mainQty < 2) mainQty = 2;
 
-                let mainTotal = basePrice * mainQty;
-                let alaCarteTotal = 0;
-                let hasAlaCarte = false;
+        connection.start().then(() => {
+            console.log("SignalR Connected");
+            connection.invoke("GetCurrentCount");
+        }).catch(err => console.error(err.toString()));
 
-                alaCarteSummaryList.innerHTML = '';
+        @if (Model != null)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                const basePrice = parseFloat(document.getElementById('basePriceDisplay').getAttribute('data-base-price')) || 0;
+                const deliveryCharge = parseFloat(document.getElementById('deliveryChargeDisplay').getAttribute('data-delivery')) || 0;
+                const mainQtyInput = document.getElementById('quantity');
+                const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+                const alaCarteSummaryContainer = document.getElementById('alaCarteSummaryContainer');
+                const alaCarteSummaryList = document.getElementById('alaCarteSummaryList');
 
-                document.querySelectorAll('.ala-carte-item').forEach(function(itemRow) {
-                    const qtyInput = itemRow.querySelector('.ala-carte-qty');
-                    const qty = parseInt(qtyInput.value) || 0;
-                    
-                    if (qty > 0) {
-                        hasAlaCarte = true;
-                        const name = itemRow.getAttribute('data-name');
-                        const price = parseFloat(itemRow.getAttribute('data-price')) || 0;
-                        const lineTotal = price * qty;
-                        alaCarteTotal += lineTotal;
-
-                        // Add to summary list
-                        const lineElem = document.createElement('div');
-                        lineElem.className = 'd-flex justify-content-between text-muted mb-1';
-                        lineElem.innerHTML = `<span>${qty}x ${name}</span><span>${getCurrencyFormat(lineTotal)}</span>`;
-                        alaCarteSummaryList.appendChild(lineElem);
-                    }
-                });
-
-                if (hasAlaCarte) {
-                    alaCarteSummaryContainer.classList.remove('d-none');
-                } else {
-                    alaCarteSummaryContainer.classList.add('d-none');
+                function getCurrencyFormat(amount) {
+                    return '$' + amount.toFixed(2);
                 }
 
-                const grandTotal = mainTotal + deliveryCharge + alaCarteTotal;
-                grandTotalDisplay.innerText = getCurrencyFormat(grandTotal);
-            }
+                function recalculateTotals() {
+                    let mainQty = parseInt(mainQtyInput.value);
+                    if (isNaN(mainQty) || mainQty < 2) mainQty = 2;
 
-            mainQtyInput.addEventListener('input', recalculateTotals);
-            mainQtyInput.addEventListener('change', recalculateTotals);
+                    let mainTotal = basePrice * mainQty;
+                    let alaCarteTotal = 0;
+                    let hasAlaCarte = false;
 
-            document.querySelectorAll('.btn-plus').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const input = this.parentElement.querySelector('.ala-carte-qty');
-                    input.value = parseInt(input.value) + 1;
-                    recalculateTotals();
-                });
-            });
+                    alaCarteSummaryList.innerHTML = '';
 
-            document.querySelectorAll('.btn-minus').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const input = this.parentElement.querySelector('.ala-carte-qty');
-                    let val = parseInt(input.value);
-                    if (val > 0) {
-                        input.value = val - 1;
+                    document.querySelectorAll('.ala-carte-item').forEach(function(itemRow) {
+                        const qtyInput = itemRow.querySelector('.ala-carte-qty');
+                        const qty = parseInt(qtyInput.value) || 0;
+                        
+                        if (qty > 0) {
+                            hasAlaCarte = true;
+                            const name = itemRow.getAttribute('data-name');
+                            const price = parseFloat(itemRow.getAttribute('data-price')) || 0;
+                            const lineTotal = price * qty;
+                            alaCarteTotal += lineTotal;
+
+                            // Add to summary list
+                            const lineElem = document.createElement('div');
+                            lineElem.className = 'd-flex justify-content-between text-muted mb-1';
+                            lineElem.innerHTML = `<span>${qty}x ${name}</span><span>${getCurrencyFormat(lineTotal)}</span>`;
+                            alaCarteSummaryList.appendChild(lineElem);
+                        }
+                    });
+
+                    if (hasAlaCarte) {
+                        alaCarteSummaryContainer.classList.remove('d-none');
+                    } else {
+                        alaCarteSummaryContainer.classList.add('d-none');
+                    }
+
+                    const grandTotal = mainTotal + deliveryCharge + alaCarteTotal;
+                    grandTotalDisplay.innerText = getCurrencyFormat(grandTotal);
+                }
+
+                if (mainQtyInput) {
+                    mainQtyInput.addEventListener('input', recalculateTotals);
+                    mainQtyInput.addEventListener('change', recalculateTotals);
+                }
+
+                document.querySelectorAll('.btn-plus').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const input = this.parentElement.querySelector('.ala-carte-qty');
+                        input.value = parseInt(input.value) + 1;
                         recalculateTotals();
-                    }
+                    });
                 });
-            });
-            
-            // Map payloads to global modal automatically
-            document.getElementById('btnOrderNow').addEventListener('click', function(e) {
-                // Prepare global checkout form
-                const checkoutForm = document.getElementById('checkout-form');
-                checkoutForm.action = '/Food/Checkout';
 
-                const cartContainer = document.getElementById('cart-data-container');
-                cartContainer.innerHTML = ''; // reset completely
-                
-                // Formulate main quantities
-                const adminOrderId = '@Model.Id';
-                const mainQty = parseInt(mainQtyInput.value) || 2;
-                
-                cartContainer.innerHTML += `<input type="hidden" name="AdminFoodOrderId" value="${adminOrderId}" />`;
-                cartContainer.innerHTML += `<input type="hidden" name="MainQuantity" value="${mainQty}" />`;
-                
-                document.querySelectorAll('.ala-carte-item').forEach(function(itemRow) {
-                    const id = itemRow.getAttribute('data-id');
-                    const qty = parseInt(itemRow.querySelector('.ala-carte-qty').value) || 0;
-                    if (qty > 0) {
-                        cartContainer.innerHTML += `<input type="hidden" name="AlaCarteQuantities[${id}]" value="${qty}" />`;
-                    }
+                document.querySelectorAll('.btn-minus').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const input = this.parentElement.querySelector('.ala-carte-qty');
+                        let val = parseInt(input.value);
+                        if (val > 0) {
+                            input.value = val - 1;
+                            recalculateTotals();
+                        }
+                    });
                 });
                 
-                // Update styling texts inside global modal to show it's food prep
-                const checkoutModalElem = document.getElementById('checkoutModal');
-                const titleElem = checkoutModalElem.querySelector('.modal-title');
-                if(titleElem) titleElem.innerText = 'Complete Food Order';
+                // Map payloads to global modal automatically
+                const btnOrderNow = document.getElementById('btnOrderNow');
+                if (btnOrderNow) {
+                    btnOrderNow.addEventListener('click', function(e) {
+                        // Prepare global checkout form
+                        const checkoutForm = document.getElementById('checkout-form');
+                        checkoutForm.action = '/Food/Checkout';
+
+                        const cartContainer = document.getElementById('cart-data-container');
+                        cartContainer.innerHTML = ''; // reset completely
+                        
+                        // Formulate main quantities
+                        const adminOrderId = '@Model.Id';
+                        const mainQty = parseInt(mainQtyInput.value) || 2;
+                        
+                        cartContainer.innerHTML += `<input type="hidden" name="AdminFoodOrderId" value="${adminOrderId}" />`;
+                        cartContainer.innerHTML += `<input type="hidden" name="MainQuantity" value="${mainQty}" />`;
+                        
+                        document.querySelectorAll('.ala-carte-item').forEach(function(itemRow) {
+                            const id = itemRow.getAttribute('data-id');
+                            const qty = parseInt(itemRow.querySelector('.ala-carte-qty').value) || 0;
+                            if (qty > 0) {
+                                cartContainer.innerHTML += `<input type="hidden" name="AlaCarteQuantities[${id}]" value="${qty}" />`;
+                            }
+                        });
+                        
+                        // Update styling texts inside global modal to show it's food prep
+                        const checkoutModalElem = document.getElementById('checkoutModal');
+                        const titleElem = checkoutModalElem.querySelector('.modal-title');
+                        if(titleElem) titleElem.innerText = 'Complete Food Order';
+                        
+                        // Show the modal explicitly
+                        const checkoutModal = new bootstrap.Modal(checkoutModalElem);
+                        checkoutModal.show();
+                    });
+                }
                 
-                // Show the modal explicitly
-                const checkoutModal = new bootstrap.Modal(checkoutModalElem);
-                checkoutModal.show();
+                recalculateTotals(); // Initial calculation
             });
-            
-            recalculateTotals(); // Initial calculation
-        });
+            </text>
+        }
+
     </script>
 }
