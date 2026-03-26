@@ -1,0 +1,32 @@
+@model string
+
+@{
+    ViewData["Title"] = "Maintenance";
+    Layout = "_Layout";
+}
+
+<div class="container text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg p-5">
+                <div class="card-body">
+                    <div class="mb-4">
+                        <i class="bi bi-tools text-primary" style="font-size: 4rem;"></i>
+                    </div>
+                    <h1 class="display-4 text-dark mb-4">Under Maintenance</h1>
+                    <p class="lead text-muted mb-5">
+                        @(string.IsNullOrEmpty(Model) ? "This functionality is not available at the moment. We are working to bring it back as soon as possible." : Model)
+                    </p>
+                    <a href="/" class="btn btn-primary btn-lg px-5">Go to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bi-tools::before {
+        content: "\f5ea";
+        font-family: inherit;
+    }
+</style>

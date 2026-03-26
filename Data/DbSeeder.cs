@@ -11,7 +11,45 @@ public static class DbSeeder
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
         await SeedAdminUserAsync(serviceProvider);
-        // Add other seeding logic here if needed (e.g. categories)
+        await SeedMaintenanceModesAsync(serviceProvider);
+    }
+
+    public static async Task SeedMaintenanceModesAsync(IServiceProvider serviceProvider)
+    {
+        var db = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        var pages = new[]
+        {
+            new { Controller = "Food", Action = (string?)null, Name = "Food (All Pages)" },
+            new { Controller = "Home", Action = "Groceries", Name = "Groceries" },
+            new { Controller = "Home", Action = "Catering", Name = "Catering" }
+        };
+
+        foreach (var page in pages)
+        {
+            if (!await db.MaintenanceModes.AnyAsync(m => m.ControllerName == page.Controller && m.ActionName == page.Action))
+            {
+                db.MaintenanceModes.Add(new MaintenanceMode 
+                { 
+                    ControllerName = page.Controller, 
+                    ActionName = page.Action,
+                    IsEnabled = true 
+                });
+            }
+        }
+
+        // Clean up old broad maintenance modes if they exist
+        var allModes = await db.MaintenanceModes.ToListAsync();
+        var oldModes = allModes
+            .Where(m => !pages.Any(p => p.Controller == m.ControllerName && p.Action == m.ActionName))
+            .ToList();
+        
+        if (oldModes.Any())
+        {
+            db.MaintenanceModes.RemoveRange(oldModes);
+        }
+
+        await db.SaveChangesAsync();
     }
 
     public static async Task SeedAdminUserAsync(IServiceProvider serviceProvider)

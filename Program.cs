@@ -35,7 +35,10 @@ builder.Services.AddAuthorization(options =>
 // To make the IsAdmin claim available in the User object
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<EcommerceStore.Filters.MaintenanceModeFilter>();
+});
 builder.Services.AddSignalR();
 
 

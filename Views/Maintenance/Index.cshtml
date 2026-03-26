@@ -1,0 +1,82 @@
+@model IEnumerable<EcommerceStore.Models.MaintenanceMode>
+
+@{
+    ViewData["Title"] = "Website Maintenance";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Website Maintenance</h1>
+        <a asp-action="Index" class="btn btn-outline-secondary">Refresh</a>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        Configure which public-facing pages are currently available for users. Admin pages are always enabled.
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Page/Functionality</th>
+                        <th>Path</th>
+                        <th>Status</th>
+                        <th>Maintenance Message</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="align-middle">
+                                <strong>
+                                    @if (item.ControllerName == "Food" && item.ActionName == null)
+                                    {
+                                        <span>Food Ordering (Whole Page)</span>
+                                    }
+                                    else
+                                    {
+                                        @item.ActionName
+                                    }
+                                </strong>
+                            </td>
+                            <td class="align-middle">
+                                <code class="small text-muted">
+                                    /@(item.ActionName ?? item.ControllerName)
+                                </code>
+                            </td>
+                            <td class="align-middle">
+                                @if (item.IsEnabled)
+                                {
+                                    <span class="badge bg-success">Live</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">In Maintenance</span>
+                                }
+                            </td>
+                            <td class="align-middle">
+                                <form asp-action="UpdateMessage" method="post" class="d-flex gap-2">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="text" name="message" value="@item.MaintenanceMessage" class="form-control form-control-sm" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
+                                </form>
+                            </td>
+                            <td class="align-middle">
+                                <form asp-action="Toggle" method="post">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn @(item.IsEnabled ? "btn-danger" : "btn-success") btn-sm w-100">
+                                        @(item.IsEnabled ? "Disable" : "Enable")
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
