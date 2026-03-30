@@ -27,9 +27,6 @@
                     </span>
                     @if (Model.MaxOrders.HasValue)
                     {
-                        <span class="badge bg-warning text-dark rounded-pill fs-6 px-4 py-2 shadow-sm border border-warning-subtle">
-                            <i class="bi bi-people-fill me-2"></i> Max Orders: @Model.MaxOrders
-                        </span>
                         <div class="live-viewer-stats rounded-pill border shadow-sm px-4 py-2" id="viewer-badge" style="font-size: 1rem;">
                             <span class="status-pulse me-2"></span>
                             <span id="viewer-count">...</span> <span id="viewer-text" class="ms-1">Users watching</span>

@@ -44,6 +44,7 @@
                 <th>Qty</th>
                 <th>Total</th>
                 <th>Order Date</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -67,13 +68,33 @@
                         </td>
                         <td class="fw-bold">@order.TotalAmount.ToString("C")</td>
                         <td class="small text-muted">@order.OrderDate.ToLocalTime().ToString("g")</td>
+                        <td>
+                            @{
+                                var orderData = new {
+                                    order.UniqueOrderId,
+                                    OrderDate = order.OrderDate.ToLocalTime().ToString("g"),
+                                    order.CustomerEmail,
+                                    order.PhoneNumber,
+                                    order.DeliveryAddress,
+                                    order.MainQuantity,
+                                    BasePrice = order.BasePrice.ToString("C"),
+                                    DeliveryCharge = order.DeliveryCharge.ToString("C"),
+                                    TotalAmount = order.TotalAmount.ToString("C"),
+                                    AlaCarteItems = order.AlaCarteItems.Select(a => new { a.Name, Quantity = a.Quantity, Price = a.Price.ToString("C") })
+                                };
+                                var orderJson = System.Text.Json.JsonSerializer.Serialize(orderData);
+                            }
+                            <button type="button" class="btn btn-sm btn-info view-order-btn text-white" data-order='@orderJson'>
+                                <i class="bi bi-eye"></i> Show Order Details
+                            </button>
+                        </td>
                     </tr>
                 }
             }
             else
             {
                 <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
+                    <td colspan="8" class="text-center py-5 text-muted">
                         <i class="bi bi-info-circle fs-4 mb-2 d-block"></i>
                         No customer orders placed for this menu yet.
                     </td>
@@ -81,6 +102,59 @@
             }
         </tbody>
     </table>
+</div>
+
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details - <span id="modalOrderNumber"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Order Date & Time:</strong> <span id="modalOrderDate"></span></p>
+                        <p class="mb-1"><strong>Email Address:</strong> <span id="modalEmail"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Phone Number:</strong> <span id="modalPhone"></span></p>
+                        <p class="mb-1"><strong>Delivery Address:</strong> <span id="modalAddress"></span></p>
+                    </div>
+                </div>
+                
+                <h6 class="border-bottom pb-2 mb-3">Order Summary</h6>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th class="text-end">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalItemsBody">
+                        <!-- Items injected here -->
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold">Delivery Charge:</td>
+                            <td class="text-end" id="modalDeliveryCharge"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold fs-5">Total Amount:</td>
+                            <td class="text-end fw-bold fs-5 text-primary" id="modalTotalAmount"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="mt-4 pb-5">
@@ -91,6 +165,56 @@
 
 @section Scripts {
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // View Order Details Modal logic
+            const viewButtons = document.querySelectorAll('.view-order-btn');
+            if (viewButtons.length > 0) {
+                const orderModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+                
+                viewButtons.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const orderData = JSON.parse(this.getAttribute('data-order'));
+                        
+                        document.getElementById('modalOrderNumber').textContent = orderData.UniqueOrderId;
+                        document.getElementById('modalOrderDate').textContent = orderData.OrderDate;
+                        document.getElementById('modalEmail').textContent = orderData.CustomerEmail;
+                        document.getElementById('modalPhone').textContent = orderData.PhoneNumber;
+                        document.getElementById('modalAddress').textContent = orderData.DeliveryAddress;
+                        
+                        document.getElementById('modalDeliveryCharge').textContent = orderData.DeliveryCharge;
+                        document.getElementById('modalTotalAmount').textContent = orderData.TotalAmount;
+                        
+                        const itemsBody = document.getElementById('modalItemsBody');
+                        itemsBody.innerHTML = '';
+                        
+                        // Main Order
+                        itemsBody.innerHTML += `
+                            <tr>
+                                <td>Main Menu Order</td>
+                                <td>${orderData.MainQuantity}</td>
+                                <td class="text-end">${orderData.BasePrice}</td>
+                            </tr>
+                        `;
+                        
+                        // Ala Carte Items
+                        if (orderData.AlaCarteItems && orderData.AlaCarteItems.length > 0) {
+                            orderData.AlaCarteItems.forEach(item => {
+                                itemsBody.innerHTML += `
+                                    <tr>
+                                        <td>${item.Name} (A La Carte)</td>
+                                        <td>${item.Quantity}</td>
+                                        <td class="text-end">${item.Price}</td>
+                                    </tr>
+                                `;
+                            });
+                        }
+                        
+                        orderModal.show();
+                    });
+                });
+            }
+        });
+
         document.getElementById('copyAddressesBtn')?.addEventListener('click', function() {
             const addresses = Array.from(document.querySelectorAll('.customer-address'))
                                    .map(el => el.getAttribute('title') || el.innerText.trim())

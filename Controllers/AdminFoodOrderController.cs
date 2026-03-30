@@ -51,6 +51,7 @@ namespace EcommerceStore.Controllers
             if (adminOrder == null) return NotFound();
 
             var orders = await _context.CustomerFoodOrders
+                .Include(o => o.AlaCarteItems)
                 .Where(o => o.AdminFoodOrderId == id)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
