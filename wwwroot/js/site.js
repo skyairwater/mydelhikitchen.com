@@ -161,26 +161,44 @@ $(document).ready(function () {
 
     // Theme Management
     const themeManager = {
+        themes: {
+            'fresh-green': { name: 'Fresh Green', color: '#236348' },
+            'warm-linen': { name: 'Warm Linen', color: '#B85D3A' },
+            'cool-fog': { name: 'Cool Fog', color: '#2C5E8A' },
+            'dark': { name: 'Midnight Dark', color: '#3ba87c' }
+        },
         init() {
-            const currentTheme = localStorage.getItem('theme') || 'light';
+            let currentTheme = localStorage.getItem('theme') || 'cool-fog';
+            if (currentTheme === 'light') currentTheme = 'cool-fog';
             this.setTheme(currentTheme);
 
-            $('#theme-toggle').click(() => {
-                const newTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-                this.setTheme(newTheme);
+            $(document).on('click', '.theme-select-btn', (e) => {
+                const selectedTheme = $(e.currentTarget).data('theme');
+                this.setTheme(selectedTheme);
             });
         },
         setTheme(theme) {
-            document.documentElement.setAttribute('data-bs-theme', theme);
+            if (!this.themes[theme]) theme = 'cool-fog';
+            const bsTheme = theme === 'dark' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', bsTheme);
+            document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
 
-            if (theme === 'dark') {
-                $('#theme-icon-light').hide();
-                $('#theme-icon-dark').show();
-            } else {
-                $('#theme-icon-light').show();
-                $('#theme-icon-dark').hide();
-            }
+            const themeInfo = this.themes[theme];
+            $('#current-theme-name').text(themeInfo.name);
+            $('#theme-swatch-current').css('color', themeInfo.color);
+
+            $('.theme-select-btn').each(function () {
+                const btnTheme = $(this).data('theme');
+                const $check = $(this).find('.theme-check-icon');
+                if (btnTheme === theme) {
+                    $check.removeClass('d-none');
+                    $(this).addClass('active fw-bold');
+                } else {
+                    $check.addClass('d-none');
+                    $(this).removeClass('active fw-bold');
+                }
+            });
         }
     };
 

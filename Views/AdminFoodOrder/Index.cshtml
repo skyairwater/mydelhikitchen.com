@@ -23,6 +23,7 @@
             <tr>
                 <th>ID</th>
                 <th>Delivery Date</th>
+                <th>Delivery Options</th>
                 <th>Created At</th>
                 <th>Price</th>
                 <th>Items Count</th>
@@ -37,6 +38,26 @@
                 <tr>
                     <td class="fw-bold">#@order.Id</td>
                     <td>@order.DeliveryDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        @if (order.IsHomeDeliveryAvailable && order.IsUptownDeliveryAvailable)
+                        {
+                            <span class="badge bg-primary text-white" title="Both Home and Uptown Delivery">
+                                <i class="bi bi-house-door"></i> + <i class="bi bi-buildings"></i> Both
+                            </span>
+                        }
+                        else if (order.IsHomeDeliveryAvailable)
+                        {
+                            <span class="badge bg-info text-dark" title="Home Delivery Only">
+                                <i class="bi bi-house-door"></i> Home
+                            </span>
+                        }
+                        else if (order.IsUptownDeliveryAvailable)
+                        {
+                            <span class="badge bg-warning text-dark" title="Uptown Delivery Only">
+                                <i class="bi bi-buildings"></i> Uptown
+                            </span>
+                        }
+                    </td>
                     <td>@order.CreatedAt.ToString("g")</td>
                     <td>@order.Price.ToString("C")</td>
                     <td>@order.Items.Count</td>
@@ -76,7 +97,7 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">No food orders found.</td>
+                    <td colspan="9" class="text-center text-muted py-4">No food orders found.</td>
                 </tr>
             }
         </tbody>

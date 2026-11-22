@@ -10,11 +10,16 @@ namespace EcommerceStore.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -64,6 +69,23 @@ namespace EcommerceStore.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+
+                    var user = await _userManager.FindByEmailAsync(Input.Email) ?? await _userManager.FindByNameAsync(Input.Email);
+                    if (user != null && user.IsAdmin)
+                    {
+                        if (!string.IsNullOrEmpty(returnUrl) &&
+                            Url.IsLocalUrl(returnUrl) &&
+                            returnUrl != "/" &&
+                            returnUrl != "~/" &&
+                            returnUrl != Url.Content("~/") &&
+                            !returnUrl.Contains("/Home", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return LocalRedirect(returnUrl);
+                        }
+
+                        return RedirectToAction("Index", "AdminFoodOrder", new { area = "" });
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

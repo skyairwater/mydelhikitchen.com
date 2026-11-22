@@ -45,10 +45,10 @@
 
                 <!-- Beautiful CSS Card for Menu -->
                 <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
-                    <div class="card-header bg-gradient bg-dark text-white p-4 border-0 shadow-sm z-1 position-relative">
-                        <h3 class="card-title mb-0 fw-bold"><i class="bi bi-card-list me-2 text-warning"></i> Today's Special Menu</h3>
+                    <div class="card-header bg-primary text-white p-4 border-0 shadow-sm z-1 position-relative">
+                        <h3 class="card-title mb-0 fw-bold"><i class="bi bi-card-list me-2" style="color: var(--accent-color);"></i> Today's Special Menu</h3>
                     </div>
-                    <div class="card-body p-4 bg-white position-relative">
+                    <div class="card-body p-4 position-relative">
                         <div class="menu-content" style="font-size: 1.1rem; line-height: 1.8;">
                             @if (!string.IsNullOrWhiteSpace(Model.Menu))
                             {
@@ -62,31 +62,66 @@
                         
                         @if (Model.Items != null && Model.Items.Any())
                         {
-                            <hr class="my-4 border-secondary opacity-25" />
-                            <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-basket2-fill me-2"></i>A la Carte Selection</h5>
-                            <ul class="list-group list-group-flush rounded-3 border">
-                                @foreach(var item in Model.Items)
-                                {
-                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light py-3 border-bottom ala-carte-item" data-id="@item.Id" data-name="@item.Name" data-price="@(item.Price ?? 0)">
-                                        <div>
-                                            <span class="fw-semibold text-dark fs-5">@item.Name</span>
-                                            @if(item.Price.HasValue)
-                                            {
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill fs-6 px-3 ms-2 ala-carte-price">
-                                                    @item.Price.Value.ToString("C")
-                                                </span>
-                                            }
-                                        </div>
-                                        <div style="width: 120px;">
-                                            <div class="input-group input-group-sm">
-                                                <button class="btn btn-outline-secondary btn-minus" type="button"><i class="bi bi-dash"></i></button>
-                                                <input type="number" class="form-control text-center ala-carte-qty" value="0" min="0" readonly style="background-color: white;" name="AlaCarte[@item.Id]" />
-                                                <button class="btn btn-outline-secondary btn-plus" type="button"><i class="bi bi-plus"></i></button>
+                            var beverageList = Model.Items.Where(i => i.Category == "Beverage").ToList();
+                            var alaCarteList = Model.Items.Where(i => i.Category != "Beverage").ToList();
+
+                            if (beverageList.Any())
+                            {
+                                <hr class="my-4 border-secondary opacity-25" />
+                                <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-cup-straw me-2"></i>Beverages</h5>
+                                <ul class="list-group list-group-flush rounded-3 border mb-3">
+                                    @foreach(var item in beverageList)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light py-3 border-bottom ala-carte-item" data-id="@item.Id" data-name="@item.Name" data-price="@(item.Price ?? 0)">
+                                            <div>
+                                                <span class="fw-semibold text-dark fs-5">@item.Name</span>
+                                                @if(item.Price.HasValue)
+                                                {
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill fs-6 px-3 ms-2 ala-carte-price">
+                                                        @item.Price.Value.ToString("C")
+                                                    </span>
+                                                }
                                             </div>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
+                                            <div style="width: 120px;">
+                                                <div class="input-group input-group-sm">
+                                                    <button class="btn btn-outline-secondary btn-minus" type="button"><i class="bi bi-dash"></i></button>
+                                                    <input type="number" class="form-control text-center ala-carte-qty" value="0" min="0" readonly style="background-color: white;" name="AlaCarte[@item.Id]" />
+                                                    <button class="btn btn-outline-secondary btn-plus" type="button"><i class="bi bi-plus"></i></button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            if (alaCarteList.Any())
+                            {
+                                <hr class="my-4 border-secondary opacity-25" />
+                                <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-basket2-fill me-2"></i>A la Carte Selection</h5>
+                                <ul class="list-group list-group-flush rounded-3 border mb-3">
+                                    @foreach(var item in alaCarteList)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light py-3 border-bottom ala-carte-item" data-id="@item.Id" data-name="@item.Name" data-price="@(item.Price ?? 0)">
+                                            <div>
+                                                <span class="fw-semibold text-dark fs-5">@item.Name</span>
+                                                @if(item.Price.HasValue)
+                                                {
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill fs-6 px-3 ms-2 ala-carte-price">
+                                                        @item.Price.Value.ToString("C")
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div style="width: 120px;">
+                                                <div class="input-group input-group-sm">
+                                                    <button class="btn btn-outline-secondary btn-minus" type="button"><i class="bi bi-dash"></i></button>
+                                                    <input type="number" class="form-control text-center ala-carte-qty" value="0" min="0" readonly style="background-color: white;" name="AlaCarte[@item.Id]" />
+                                                    <button class="btn btn-outline-secondary btn-plus" type="button"><i class="bi bi-plus"></i></button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
                         }
                     </div>
                 </div>
@@ -135,7 +170,7 @@
                     <div class="card-header bg-primary text-white p-4 border-0 text-center">
                         <h4 class="fw-bold mb-0">Place your Order</h4>
                     </div>
-                    <div class="card-body p-4 p-md-5 bg-white">
+                    <div class="card-body p-4 p-md-5">
                         
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-2">
                             <span class="text-secondary fs-5 fw-semibold">Base Price</span>

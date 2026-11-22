@@ -4,11 +4,11 @@
     ViewData["Title"] = "Create Food Order";
 }
 
-<div class="row mt-4 mb-5 pb-5">
-    <div class="col-md-8 offset-md-2">
+<div class="row mt-4 mb-5 pb-5 justify-content-center">
+    <div class="col-lg-10">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Create Food Order</h2>
-            <a asp-action="Index" class="btn btn-outline-secondary">Show all food orders</a>
+            <a asp-action="Index" class="btn btn-success"><i class="bi bi-list-ul me-1"></i>Show all food orders</a>
         </div>
 
         @if (TempData["Message"] != null)
@@ -19,101 +19,229 @@
             </div>
         }
 
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <form asp-action="Create" method="post" enctype="multipart/form-data">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="mb-3">
-                        <label asp-for="DeliveryDate" class="form-label fw-bold"></label>
-                        <input asp-for="DeliveryDate" type="text" id="datepicker" class="form-control" autocomplete="off" />
-                        <span asp-validation-for="DeliveryDate" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Menu" class="form-label fw-bold"></label>
-                        <textarea asp-for="Menu" id="menuEditor" class="form-control" rows="8"></textarea>
-                        <span asp-validation-for="Menu" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Price" class="form-label fw-bold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input asp-for="Price" class="form-control" type="number" step="0.01" />
+                    <div class="card mb-4 border shadow-sm">
+                        <div class="card-header bg-primary text-white py-2 px-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-card-checklist me-2"></i>Lunch Details</h5>
                         </div>
-                        <span asp-validation-for="Price" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="DeliveryCharge" class="form-label fw-bold"></label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input asp-for="DeliveryCharge" class="form-control" type="number" step="0.01" />
-                        </div>
-                        <span asp-validation-for="DeliveryCharge" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Comments" class="form-label fw-bold"></label>
-                        <textarea asp-for="Comments" class="form-control" rows="3"></textarea>
-                        <span asp-validation-for="Comments" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="MaxOrders" class="form-label fw-bold"></label>
-                        <input asp-for="MaxOrders" class="form-control" type="number" min="1" placeholder="Left blank for unlimited orders" />
-                        <span asp-validation-for="MaxOrders" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="Photos" class="form-label fw-bold"></label>
-                        <input asp-for="Photos" type="file" multiple accept="image/*" class="form-control" id="photoUpload" />
-                        <span asp-validation-for="Photos" class="text-danger"></span>
-                        <small class="text-muted d-block mt-1">Upload up to 10 photos. Images will be automatically resized to a maximum of 300x300 pixels.</small>
-                    </div>
-
-                    <hr class="my-4" />
-                    <h4 class="mb-3">Food Items</h4>
-                    <table class="table table-bordered align-middle" id="foodItemsTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Food Name (Max 500 characters)</th>
-                                <th style="width: 200px;">Price</th>
-                                <th style="width: 70px;" class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int i = 0; i < Model.Items.Count; i++)
-                            {
-                                <tr>
-                                    <td>
-                                        <input asp-for="Items[i].Name" class="form-control" maxlength="500" placeholder="Enter food name" />
-                                        <span asp-validation-for="Items[i].Name" class="text-danger d-block mt-1"></span>
-                                    </td>
-                                    <td>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input asp-for="Items[i].Price" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                        <div class="card-body p-4">
+                            <div class="row g-3 align-items-start mb-3">
+                                <div class="col-md-4">
+                                    <label asp-for="DeliveryDate" class="form-label fw-bold"></label>
+                                    <input asp-for="DeliveryDate" type="text" id="datepicker" class="form-control" style="max-width: 220px;" autocomplete="off" />
+                                    <span asp-validation-for="DeliveryDate" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-8 pt-md-4">
+                                    <div class="d-flex align-items-start flex-wrap gap-4">
+                                        <div class="form-check fs-5 mb-0">
+                                            <input asp-for="IsHomeDeliveryAvailable" class="form-check-input delivery-option-check" type="checkbox" id="checkHomeDelivery" />
+                                            <label class="form-check-label" for="checkHomeDelivery">
+                                                <i class="bi bi-house-door text-primary me-1"></i> Home Delivery
+                                            </label>
                                         </div>
-                                        <span asp-validation-for="Items[i].Price" class="text-danger d-block mt-1"></span>
-                                    </td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-success btn-sm add-row" title="Add Row">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        <div class="d-flex flex-column">
+                                            <div class="form-check fs-5 mb-0">
+                                                <input asp-for="IsUptownDeliveryAvailable" class="form-check-input delivery-option-check" type="checkbox" id="checkUptownDelivery" />
+                                                <label class="form-check-label" for="checkUptownDelivery">
+                                                    <i class="bi bi-buildings text-primary me-1"></i> Uptown Delivery
+                                                </label>
+                                            </div>
+                                            <div class="mt-1 ps-4" id="manageLocationsContainer" style="display: none;">
+                                                <a asp-controller="DeliveryLocations" asp-action="Index" target="_blank" class="text-decoration-none fw-semibold text-primary" style="font-size: 0.8rem;" title="Open delivery locations manager in a new tab">
+                                                    <i class="bi bi-geo-alt-fill me-1"></i>manage delivery locations
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span asp-validation-for="IsHomeDeliveryAvailable" class="text-danger d-block mt-1" id="deliveryOptionValidation"></span>
+                                </div>
+                            </div>
 
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">Publish Food Order</button>
+                            <!-- Uptown Delivery Locations (above lunch menu row) -->
+                            <div id="uptownLocationsSection" class="mb-2" style="display: @(Model.IsUptownDeliveryAvailable ? "block" : "none");">
+                                <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.8rem;">Uptown Delivery Locations:</label>
+                                @if (Model.AvailableDeliveryLocations != null && Model.AvailableDeliveryLocations.Any())
+                                {
+                                    <div class="d-flex flex-wrap align-items-center gap-3">
+                                        @foreach (var loc in Model.AvailableDeliveryLocations)
+                                        {
+                                            var isChecked = Model.SelectedDeliveryLocationIds != null && Model.SelectedDeliveryLocationIds.Contains(loc.Id);
+                                            <div class="form-check form-check-inline mb-0 me-2 d-inline-flex align-items-center" style="font-size: 0.82rem;">
+                                                <input class="form-check-input me-1" 
+                                                       type="checkbox" 
+                                                       name="SelectedDeliveryLocationIds" 
+                                                       value="@loc.Id" 
+                                                       id="loc_@loc.Id" 
+                                                       @(isChecked ? "checked" : "") 
+                                                       style="cursor: pointer;" />
+                                                <a href="/deliverylocations?highlightId=@loc.Id" 
+                                                   target="_blank" 
+                                                   class="text-decoration-none fw-semibold text-primary" 
+                                                   title="View @loc.Name on map (opens in new tab)">
+                                                    @loc.Name <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.7rem;"></i>
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Menu" class="form-label fw-bold">Lunch Menu</label>
+                                <textarea asp-for="Menu" id="menuEditor" class="form-control" rows="8"></textarea>
+                                <span asp-validation-for="Menu" class="text-danger"></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label asp-for="Price" class="form-label fw-bold">Lunch Price</label>
+                                    <div class="input-group" style="max-width: 220px;">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Price" class="form-control" type="number" step="0.01" />
+                                    </div>
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label asp-for="DeliveryCharge" class="form-label fw-bold"></label>
+                                    <div class="input-group" style="max-width: 220px;">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="DeliveryCharge" class="form-control" type="number" step="0.01" />
+                                    </div>
+                                    <span asp-validation-for="DeliveryCharge" class="text-danger"></span>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label asp-for="MaxOrders" class="form-label fw-bold">Maximum Number of Lunch</label>
+                                    <input asp-for="MaxOrders" class="form-control" type="number" min="1" placeholder="Blank for unlimited" style="max-width: 220px;" />
+                                    <span asp-validation-for="MaxOrders" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <hr class="my-4" />
+                            <h5 class="fw-bold mb-3">Beverages</h5>
+                            <table class="table table-bordered align-middle" id="beverageItemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Beverage Name (Max 500 characters)</th>
+                                        <th style="width: 200px;">Price</th>
+                                        <th style="width: 70px;" class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.BeverageItems.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input asp-for="BeverageItems[i].Name" class="form-control" maxlength="500" placeholder="Enter beverage name" />
+                                                <span asp-validation-for="BeverageItems[i].Name" class="text-danger d-block mt-1"></span>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input asp-for="BeverageItems[i].Price" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                                                </div>
+                                                <span asp-validation-for="BeverageItems[i].Price" class="text-danger d-block mt-1"></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-success btn-sm add-row" title="Add Row">
+                                                    <i class="bi bi-plus-lg"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </form>
+
+                    <div class="card mb-4 border shadow-sm">
+                        <div class="card-header bg-success text-white py-2 px-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-basket2-fill me-2"></i>A la carte</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <table class="table table-bordered align-middle mb-0" id="alaCarteItemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Item Name (Max 500 characters)</th>
+                                        <th style="width: 200px;">Price</th>
+                                        <th style="width: 70px;" class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.AlaCarteItems.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input asp-for="AlaCarteItems[i].Name" class="form-control" maxlength="500" placeholder="Enter item name" />
+                                                <span asp-validation-for="AlaCarteItems[i].Name" class="text-danger d-block mt-1"></span>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input asp-for="AlaCarteItems[i].Price" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                                                </div>
+                                                <span asp-validation-for="AlaCarteItems[i].Price" class="text-danger d-block mt-1"></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-success btn-sm add-row" title="Add Row">
+                                                    <i class="bi bi-plus-lg"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card my-4 border shadow-sm">
+                        <div class="card-header bg-secondary text-white py-2 px-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-chat-left-text me-2"></i>Comments & Photos</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label asp-for="Comments" class="form-label fw-bold"></label>
+                                <textarea asp-for="Comments" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Comments" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-0">
+                                <label asp-for="Photos" class="form-label fw-bold"></label>
+                                <input asp-for="Photos" type="file" multiple accept="image/*" class="form-control" id="photoUpload" />
+                                <span asp-validation-for="Photos" class="text-danger"></span>
+                                <small class="text-muted d-block mt-1">Upload up to 10 photos. Images will be automatically resized to a maximum of 300x300 pixels.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card my-4 border shadow-sm">
+                        <div class="card-header text-white py-2 px-3" style="background-color: var(--primary-color) !important;">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-receipt me-2" style="color: var(--accent-color);"></i>Tax Settings</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center flex-wrap gap-3">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" asp-for="AddTaxToCustomers" id="AddTaxToCustomers" checked />
+                                    <label class="form-check-label fw-bold" for="AddTaxToCustomers">
+                                        Add Tax to Customers
+                                    </label>
+                                </div>
+                                <div class="input-group input-group-sm" style="width: 140px;" id="taxRateContainer">
+                                    <input type="number" step="0.01" min="0" max="100" class="form-control text-end fw-semibold" asp-for="TaxPercentage" id="TaxPercentage" value="@(Model.TaxPercentage > 0 ? Model.TaxPercentage.ToString("0.##") : "9.25")" />
+                                    <span class="input-group-text fw-bold">%</span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="TaxPercentage" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                    </div>
+
+            <div class="d-grid mt-4 mb-5">
+                <button type="submit" class="btn btn-primary btn-lg">Publish Food Order</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 
@@ -153,7 +281,8 @@
 
             // Dynamic Row Addition
             $(document).on('click', '.add-row', function () {
-                var $tbody = $('#foodItemsTable tbody');
+                var $table = $(this).closest('table');
+                var $tbody = $table.find('tbody');
                 var $lastRow = $tbody.find('tr:last');
                 var $newRow = $lastRow.clone();
                 var rowIndex = $tbody.find('tr').length;
@@ -198,6 +327,53 @@
                     this.value = ''; // clear the input
                 }
             });
+
+            // Validate at least one delivery option is selected
+            $('form').on('submit', function (e) {
+                var homeChecked = $('#checkHomeDelivery').is(':checked');
+                var uptownChecked = $('#checkUptownDelivery').is(':checked');
+                if (!homeChecked && !uptownChecked) {
+                    e.preventDefault();
+                    $('#deliveryOptionValidation').text('Please select at least one delivery option (Home Delivery or Uptown Delivery).');
+                    return false;
+                } else {
+                    $('#deliveryOptionValidation').text('');
+                }
+            });
+
+            $('.delivery-option-check').on('change', function () {
+                var homeChecked = $('#checkHomeDelivery').is(':checked');
+                var uptownChecked = $('#checkUptownDelivery').is(':checked');
+                if (homeChecked || uptownChecked) {
+                    $('#deliveryOptionValidation').text('');
+                }
+            });
+
+            // Toggle "manage delivery locations" link & locations checkboxes when Uptown Delivery is checked
+            function updateManageLocationsLink() {
+                if ($('#checkUptownDelivery').is(':checked')) {
+                    $('#manageLocationsContainer').fadeIn(200);
+                    $('#uptownLocationsSection').slideDown(200);
+                } else {
+                    $('#manageLocationsContainer').hide();
+                    $('#uptownLocationsSection').slideUp(200);
+                }
+            }
+            $('#checkUptownDelivery').on('change', updateManageLocationsLink);
+            updateManageLocationsLink();
+
+            // Toggle Tax rate input when "Add Tax to Customers" checkbox changes
+            function updateTaxInputState() {
+                var isTaxChecked = $('#AddTaxToCustomers').is(':checked');
+                $('#TaxPercentage').prop('disabled', !isTaxChecked);
+                if (isTaxChecked) {
+                    $('#taxRateContainer').removeClass('opacity-50');
+                } else {
+                    $('#taxRateContainer').addClass('opacity-50');
+                }
+            }
+            $('#AddTaxToCustomers').on('change', updateTaxInputState);
+            updateTaxInputState();
         });
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

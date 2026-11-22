@@ -13,6 +13,42 @@ public static class DbSeeder
         await SeedAdminUserAsync(serviceProvider);
         await SeedMaintenanceModesAsync(serviceProvider);
         await SeedAppDynamicMessagesAsync(serviceProvider);
+        await SeedDeliveryLocationsAsync(serviceProvider);
+    }
+
+    public static async Task SeedDeliveryLocationsAsync(IServiceProvider serviceProvider)
+    {
+        var db = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        if (!await db.DeliveryLocations.AnyAsync())
+        {
+            db.DeliveryLocations.AddRange(
+                new DeliveryLocation
+                {
+                    Name = "Bank of America Corporate Center",
+                    Description = "100 N Tryon St, Charlotte, NC 28202",
+                    Latitude = 35.2273,
+                    Longitude = -80.8431,
+                    IsEnabled = true
+                },
+                new DeliveryLocation
+                {
+                    Name = "Duke Energy Plaza / 550 S Tryon",
+                    Description = "525 S Tryon St, Charlotte, NC 28202",
+                    Latitude = 35.2238,
+                    Longitude = -80.8492,
+                    IsEnabled = true
+                },
+                new DeliveryLocation
+                {
+                    Name = "The Green / Wells Fargo Plaza",
+                    Description = "401 S Tryon St, Charlotte, NC 28202",
+                    Latitude = 35.2246,
+                    Longitude = -80.8475,
+                    IsEnabled = true
+                }
+            );
+            await db.SaveChangesAsync();
+        }
     }
 
     public static async Task SeedAppDynamicMessagesAsync(IServiceProvider serviceProvider)

@@ -1,0 +1,404 @@
+@model IEnumerable<EcommerceStore.Models.DeliveryLocation>
+
+@{
+    ViewData["Title"] = "Manage Delivery Locations";
+}
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+<style>
+    #map {
+        height: 520px;
+        width: 100%;
+        border-radius: 0.75rem;
+        z-index: 1;
+    }
+    .map-container {
+        position: relative;
+    }
+    .map-instructions {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(4px);
+        padding: 8px 14px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 0.85rem;
+        color: #212529;
+    }
+    [data-bs-theme="dark"] .map-instructions {
+        background: rgba(33, 37, 41, 0.95);
+        color: #e0e0e0;
+    }
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+    }
+</style>
+
+<div class="py-4 pb-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-primary me-2"></i>Uptown Delivery Locations</h2>
+            <p class="text-muted mb-0">Drop a pin on Charlotte Uptown streets to record coordinates and manage delivery pickup spots.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-primary me-2" id="btnResetView" title="Reset map to Charlotte Uptown">
+                <i class="bi bi-crosshair me-1"></i> Center Uptown
+            </button>
+            <a asp-controller="AdminFoodOrder" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Food Orders
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Map & Location Form Section -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-map me-2"></i>Interactive Uptown Map</span>
+                    <small class="text-muted">Click anywhere on the street to set pin</small>
+                </div>
+                <div class="card-body p-2 map-container">
+                    <div class="map-instructions d-none d-md-block">
+                        <i class="bi bi-info-circle text-primary me-1"></i> Click map to drop pin & capture coordinates
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-transparent py-3">
+                    <h5 class="fw-bold mb-0" id="formHeader">
+                        <i class="bi bi-pin-map-fill text-danger me-2"></i>Add New Location
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" id="createLocationForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="alert alert-info py-2 px-3 small mb-3" id="pinAlert">
+                            <i class="bi bi-cursor-fill me-1"></i> <strong>Step 1:</strong> Click on the map to drop a pin.
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold small">Latitude</label>
+                                <input type="number" step="any" class="form-control form-control-sm bg-body-tertiary" id="txtLatitude" name="Latitude" readonly required placeholder="Click map" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold small">Longitude</label>
+                                <input type="number" step="any" class="form-control form-control-sm bg-body-tertiary" id="txtLongitude" name="Longitude" readonly required placeholder="Click map" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Location Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txtName" name="Name" required maxlength="200" placeholder="e.g. WellsFargoBuilding1" />
+                            <small class="text-muted">Descriptive identifier for this pickup location.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Description / Notes</label>
+                            <textarea class="form-control" id="txtDescription" name="Description" rows="3" maxlength="1000" placeholder="e.g. Corner of S Tryon & Levine Ave, near main lobby entrance."></textarea>
+                            <small class="text-muted">Specific street side, landmark, or customer pickup instructions.</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="btnSaveLocation" disabled>
+                                <i class="bi bi-save me-1"></i> Save Location
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearPin" style="display: none;">
+                                Clear Current Pin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Locations List -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">
+                <i class="bi bi-list-check me-2"></i>Saved Delivery Locations (@Model.Count())
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="locationsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 22%;">Location Name</th>
+                            <th style="width: 32%;">Description / Notes</th>
+                            <th style="width: 18%;">Coordinates</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 18%;" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loc in Model)
+                        {
+                            <tr id="row-@loc.Id" class="@(!loc.IsEnabled ? "table-secondary text-muted" : "")">
+                                <td class="fw-bold">
+                                    <i class="bi @(loc.IsEnabled ? "bi-geo-alt-fill text-success" : "bi-geo-alt text-secondary") me-1"></i>
+                                    @loc.Name
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(loc.Description))
+                                    {
+                                        <span>@loc.Description</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">No description provided</span>
+                                    }
+                                </td>
+                                <td>
+                                    <code>@loc.Latitude.ToString("F5"), @loc.Longitude.ToString("F5")</code>
+                                </td>
+                                <td>
+                                    @if (loc.IsEnabled)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Disabled</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-locate" data-id="@loc.Id" data-lat="@loc.Latitude" data-lng="@loc.Longitude" data-name="@loc.Name" title="Center on map">
+                                        <i class="bi bi-geo"></i> Locate
+                                    </button>
+                                    <form asp-action="ToggleStatus" asp-route-id="@loc.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(loc.IsEnabled ? "btn-outline-warning" : "btn-outline-success") me-1" title="@(loc.IsEnabled ? "Disable location" : "Enable location")">
+                                            <i class="bi @(loc.IsEnabled ? "bi-slash-circle" : "bi-check-circle")"></i> @(loc.IsEnabled ? "Disable" : "Enable")
+                                        </button>
+                                    </form>
+                                    <form asp-action="Delete" asp-route-id="@loc.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this delivery location?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete location">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr id="noLocationsRow">
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    <i class="bi bi-geo-alt fs-1 d-block mb-2 text-secondary"></i>
+                                    No delivery locations added yet. Click anywhere on the map above to drop a pin and add your first location.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        $(document).ready(function () {
+            // Charlotte Uptown Coordinates
+            const UPTOWN_CHARLOTTE = [35.2271, -80.8431];
+            const DEFAULT_ZOOM = 15;
+
+            // Initialize Leaflet Map
+            const map = L.map('map', {
+                scrollWheelZoom: false // Prevents trapping page scroll when scrolling down past the map
+            }).setView(UPTOWN_CHARLOTTE, DEFAULT_ZOOM);
+
+            // Enable scroll wheel zoom on map interaction, disable when mouse leaves map
+            map.on('click', function () {
+                map.scrollWheelZoom.enable();
+            });
+            $('#map').on('mouseleave', function () {
+                map.scrollWheelZoom.disable();
+            });
+
+            // OpenStreetMap Standard Tiles
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Custom Marker Icons
+            const createSvgIcon = (color) => {
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+                    <path fill="${color}" stroke="#fff" stroke-width="1.5" d="M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 8 15 1-2 8-9.75 8-15 0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+                </svg>`;
+                return L.divIcon({
+                    className: 'custom-map-pin',
+                    html: svg,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                });
+            };
+
+            const activeIcon = createSvgIcon('#198754');    // Green
+            const disabledIcon = createSvgIcon('#6c757d');  // Gray
+            const newPinIcon = createSvgIcon('#dc3545');    // Red
+
+            let activeNewMarker = null;
+            const savedMarkers = {};
+
+            // Render existing locations on map
+            const existingLocations = [
+                @foreach (var loc in Model)
+                {
+                    <text>{
+                        id: @loc.Id,
+                        name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(loc.Name)),
+                        description: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(loc.Description ?? "")),
+                        lat: @loc.Latitude,
+                        lng: @loc.Longitude,
+                        isEnabled: @(loc.IsEnabled ? "true" : "false")
+                    },</text>
+                }
+            ];
+
+            existingLocations.forEach(loc => {
+                const marker = L.marker([loc.lat, loc.lng], {
+                    icon: loc.isEnabled ? activeIcon : disabledIcon
+                }).addTo(map);
+
+                const statusBadge = loc.isEnabled 
+                    ? '<span class="badge bg-success">Active</span>' 
+                    : '<span class="badge bg-secondary">Disabled</span>';
+
+                marker.bindPopup(`
+                    <div style="min-width: 180px;">
+                        <h6 class="fw-bold mb-1">${loc.name}</h6>
+                        <div class="mb-2">${statusBadge}</div>
+                        ${loc.description ? `<p class="small text-muted mb-2">${loc.description}</p>` : ''}
+                        <code class="small text-secondary">${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}</code>
+                    </div>
+                `);
+
+                savedMarkers[loc.id] = marker;
+            });
+
+            // Automatically focus and open balloon popup if highlightId is present in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = parseInt(urlParams.get('highlightId') || urlParams.get('id'));
+            if (highlightId && savedMarkers[highlightId]) {
+                const targetMarker = savedMarkers[highlightId];
+                map.setView(targetMarker.getLatLng(), 17);
+                setTimeout(function () {
+                    targetMarker.openPopup();
+                }, 350);
+            }
+
+            // Map Click Event -> Drop Pin & Record Coordinates
+            map.on('click', function (e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+
+                // Update coordinate inputs
+                $('#txtLatitude').val(lat.toFixed(6));
+                $('#txtLongitude').val(lng.toFixed(6));
+
+                // Place or move new pin marker
+                if (activeNewMarker) {
+                    activeNewMarker.setLatLng(e.latlng);
+                } else {
+                    activeNewMarker = L.marker(e.latlng, {
+                        icon: newPinIcon,
+                        draggable: true
+                    }).addTo(map);
+
+                    activeNewMarker.on('dragend', function (event) {
+                        const position = event.target.getLatLng();
+                        $('#txtLatitude').val(position.lat.toFixed(6));
+                        $('#txtLongitude').val(position.lng.toFixed(6));
+                    });
+                }
+
+                activeNewMarker.bindPopup(`
+                    <div class="text-center">
+                        <strong class="text-danger">New Selected Pin</strong><br/>
+                        <small>Drag to fine-tune</small>
+                    </div>
+                `).openPopup();
+
+                // Enable submit button and update UI guidance
+                $('#btnSaveLocation').prop('disabled', false);
+                $('#btnClearPin').show();
+                $('#pinAlert').removeClass('alert-info').addClass('alert-success').html(
+                    '<i class="bi bi-check-circle-fill me-1"></i> <strong>Coordinates captured!</strong> Enter location name and click Save.'
+                );
+
+                $('#txtName').focus();
+            });
+
+            // Clear pin handler
+            $('#btnClearPin').on('click', function () {
+                if (activeNewMarker) {
+                    map.removeLayer(activeNewMarker);
+                    activeNewMarker = null;
+                }
+                $('#txtLatitude').val('');
+                $('#txtLongitude').val('');
+                $('#btnSaveLocation').prop('disabled', true);
+                $(this).hide();
+                $('#pinAlert').removeClass('alert-success').addClass('alert-info').html(
+                    '<i class="bi bi-cursor-fill me-1"></i> <strong>Step 1:</strong> Click on the map to drop a pin.'
+                );
+            });
+
+            // Reset view to Uptown Charlotte
+            $('#btnResetView').on('click', function () {
+                map.setView(UPTOWN_CHARLOTTE, DEFAULT_ZOOM);
+            });
+
+            // Click "Locate" button in table -> Pan & Zoom Map to marker
+            $('.btn-locate').on('click', function () {
+                const id = $(this).data('id');
+                const lat = parseFloat($(this).data('lat'));
+                const lng = parseFloat($(this).data('lng'));
+
+                map.setView([lat, lng], 17);
+
+                if (savedMarkers[id]) {
+                    savedMarkers[id].openPopup();
+                }
+
+                $('html, body').animate({
+                    scrollTop: $('#map').offset().top - 90
+                }, 400);
+            });
+        });
+    </script>
+}

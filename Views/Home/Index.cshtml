@@ -15,28 +15,64 @@
         z-index: 10;
     }
 
-    /* Responsive Logo */
+    /* 3D Box Carousel for Hero Logos */
     .logo-wrap {
         margin: 0 auto 1.5rem;
         max-width: 850px;
         padding: 0 15px;
+        perspective: 1200px;
     }
 
-    .hero-logo {
-        max-width: 100%;
-        height: auto;
+    .cube-container {
+        position: relative;
+        width: 100%;
         max-height: 520px;
-        object-fit: contain;
+        aspect-ratio: 16 / 9;
+        margin: 0 auto;
+        transform-style: preserve-3d;
         border-radius: 12px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         opacity: 0;
         transform: translateY(20px);
         transition: opacity 1.2s ease, transform 1.2s ease;
+        overflow: hidden;
     }
 
-    .show .hero-logo {
+    .show .cube-container {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    .cube-face {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: var(--card-bg, #ffffff);
+        border-radius: 12px;
+        backface-visibility: hidden;
+        transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 1s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    /* Face states: Front (Visible), Out (Rotate up like a box), In (Waiting below) */
+    .cube-face.face-active {
+        transform: translateY(0) rotateX(0deg);
+        opacity: 1;
+        z-index: 2;
+    }
+
+    .cube-face.face-hidden-top {
+        transform: translateY(-100%) rotateX(90deg);
+        opacity: 0;
+        z-index: 1;
+    }
+
+    .cube-face.face-hidden-bottom {
+        transform: translateY(100%) rotateX(-90deg);
+        opacity: 0;
+        z-index: 1;
     }
 
     /* Title */
@@ -133,12 +169,12 @@
 
     /* Respect reduced motion */
     @@media (prefers-reduced-motion: reduce) {
-        .title, .rule, .tagline, .glow, .hero-logo {
+        .title, .rule, .tagline, .glow, .cube-container, .cube-face {
             animation: none !important;
             transition: none !important;
         }
 
-        .title, .tagline, .hero-logo {
+        .title, .tagline, .cube-container {
             opacity: 1;
             transform: none;
             filter: none;
@@ -156,7 +192,10 @@
 
     <div class="wrap" id="wrap">
         <div class="logo-wrap">
-            <img src="~/images/MyDelhiKitchenlogv1.png" alt="My Delhi Kitchen Logo" class="img-fluid hero-logo" asp-append-version="true" />
+            <div class="cube-container" id="heroCube">
+                <img src="~/images/MyDelhiKitchenIndia.png" alt="My Delhi Kitchen India" class="cube-face face-active" id="cubeFace1" asp-append-version="true" />
+                <img src="~/images/MyDelhiKitchenUptown.png" alt="My Delhi Kitchen Uptown" class="cube-face face-hidden-bottom" id="cubeFace2" asp-append-version="true" />
+            </div>
         </div>
         <h1 class="title">Delhi Kitchen</h1>
         <div class="rule"></div>
@@ -166,40 +205,80 @@
 
 <script>
     window.addEventListener("load", () => {
-      // small delay makes it feel more "premium"
+      // reveal animation
       setTimeout(() => document.getElementById("wrap").classList.add("show"), 120);
+
+      // 3D Box continuous flip every 4 seconds
+      const face1 = document.getElementById("cubeFace1");
+      const face2 = document.getElementById("cubeFace2");
+      let currentFace = 1;
+
+      setInterval(() => {
+          if (currentFace === 1) {
+              // Face 1 rotates up and hides
+              face1.classList.remove("face-active", "face-hidden-bottom");
+              face1.classList.add("face-hidden-top");
+
+              // Face 2 rotates up from bottom into front view
+              face2.classList.remove("face-hidden-bottom", "face-hidden-top");
+              face2.classList.add("face-active");
+
+              // Prepare face 1 to come back from bottom on next turn
+              setTimeout(() => {
+                  face1.classList.remove("face-hidden-top");
+                  face1.classList.add("face-hidden-bottom");
+              }, 1000);
+
+              currentFace = 2;
+          } else {
+              // Face 2 rotates up and hides
+              face2.classList.remove("face-active", "face-hidden-bottom");
+              face2.classList.add("face-hidden-top");
+
+              // Face 1 rotates up from bottom into front view
+              face1.classList.remove("face-hidden-bottom", "face-hidden-top");
+              face1.classList.add("face-active");
+
+              // Prepare face 2 to come back from bottom on next turn
+              setTimeout(() => {
+                  face2.classList.remove("face-hidden-top");
+                  face2.classList.add("face-hidden-bottom");
+              }, 1000);
+
+              currentFace = 1;
+          }
+      }, 4000);
     });
 </script>
 
 
 <div class="container-fluid px-0">
-    
-    <div class="container py-5">
-        <div class="row text-center mb-5">
+    <div class="container py-4">
+        <div class="row text-center mb-4">
             <div class="col-12">
-                <h2 class="fw-bold">Pure Vegetarian, Healthy, Freshly prepared food delivered to your door step in Charlotte</h2>                
+                <h2 class="fw-bold" style="color: var(--text-color);">Pure Vegetarian, Healthy, Freshly Prepared Food Delivered to Your Doorstep in Charlotte</h2>                
             </div>
         </div>
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <i class="bi bi-shop text-primary mb-3" style="font-size: 2.5rem;"></i>
-                    <h3 class="h5 fw-bold">Indian Groceries</h3>
-                    <p class="small text-muted">Wide range of Indian spices, dals, rice, and frozen snacks at prices less than retail stores, delivered free to your house.</p>
+                <div class="card h-100 border shadow-sm p-4 text-center rounded-4">
+                    <i class="bi bi-shop mb-3" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                    <h3 class="h5 fw-bold text-primary">Indian Groceries</h3>
+                    <p class="small text-muted mb-0">Wide range of Indian spices, dals, rice, and fresh groceries at prices lower than retail stores, delivered directly to your home.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <i class="bi bi-egg-fried text-warning mb-3" style="font-size: 2.5rem;"></i>
-                    <h3 class="h5 fw-bold">Fresh Indian Food</h3>
-                    <p class="small text-muted">Delicious North Indian meals prepared fresh with high-quality ingredients.</p>
+                <div class="card h-100 border shadow-sm p-4 text-center rounded-4">
+                    <i class="bi bi-egg-fried mb-3" style="font-size: 2.5rem; color: var(--accent-color);"></i>
+                    <h3 class="h5 fw-bold" style="color: var(--text-color);">Fresh Indian Food</h3>
+                    <p class="small text-muted mb-0">Authentic, piping hot North Indian lunches and dinner meals prepared fresh with premium quality ingredients.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                    <i class="bi bi-truck text-success mb-3" style="font-size: 2.5rem;"></i>
-                    <h3 class="h5 fw-bold">Catering Services</h3>
-                    <p class="small text-muted">Reliable Indian food catering for parties and events across Charlotte.</p>
+                <div class="card h-100 border shadow-sm p-4 text-center rounded-4">
+                    <i class="bi bi-truck mb-3" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                    <h3 class="h5 fw-bold text-primary">Catering Services</h3>
+                    <p class="small text-muted mb-0">Customized, reliable Indian catering for birthdays, poojas, parties, and corporate gatherings across Charlotte, NC.</p>
                 </div>
             </div>
         </div>

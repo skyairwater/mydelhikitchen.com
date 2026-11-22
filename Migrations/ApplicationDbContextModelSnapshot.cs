@@ -31,6 +31,9 @@ namespace EcommerceStore.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AddTaxToCustomers")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Comments")
                         .HasColumnType("text");
 
@@ -43,7 +46,17 @@ namespace EcommerceStore.Migrations
                     b.Property<DateTime>("DeliveryDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<List<int>>("DeliveryLocationIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsHomeDeliveryAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsUptownDeliveryAvailable")
                         .HasColumnType("boolean");
 
                     b.Property<int?>("MaxOrders")
@@ -57,6 +70,9 @@ namespace EcommerceStore.Migrations
                         .HasColumnType("text[]");
 
                     b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TaxPercentage")
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
@@ -74,6 +90,10 @@ namespace EcommerceStore.Migrations
 
                     b.Property<int>("AdminFoodOrderId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(500)
@@ -279,6 +299,40 @@ namespace EcommerceStore.Migrations
                     b.HasIndex("CustomerFoodOrderId");
 
                     b.ToTable("CustomerFoodOrderItems");
+                });
+
+            modelBuilder.Entity("EcommerceStore.Models.DeliveryLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DeliveryLocations");
                 });
 
             modelBuilder.Entity("EcommerceStore.Models.MaintenanceMode", b =>
