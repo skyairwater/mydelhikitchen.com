@@ -15,4 +15,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CustomerFoodOrder> CustomerFoodOrders { get; set; }
     public DbSet<CustomerFoodOrderItem> CustomerFoodOrderItems { get; set; }
     public DbSet<MaintenanceMode> MaintenanceModes { get; set; }
+    public DbSet<AppDynamicMessage> AppDynamicMessages { get; set; }
 }

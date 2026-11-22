@@ -1,4 +1,5 @@
-﻿@model IEnumerable<EcommerceStore.Models.Category>
+@model IEnumerable<EcommerceStore.Models.Category>
+@inject EcommerceStore.Data.ApplicationDbContext DbContext
 
 @{
     ViewData["Title"] = "Groceries";
@@ -37,16 +38,39 @@
                     </div>
                 </div>
             </div>
-            <div class="row mt-2">
-                <div class="col-12 text-center">
-                    <div class="px-3 py-1 bg-success-subtle text-success rounded-pill d-inline-block border border-success-subtle">
-                        <small class="fw-medium">
-                            <i class="bi bi-truck me-1"></i>
-                            Free delivery for Delhi Kitchen Customers!
-                        </small>
+            @{
+                var groceriesMsg = DbContext.AppDynamicMessages.FirstOrDefault(m => m.Tag == "Groceries message")?.Content;
+            }
+            @if (!string.IsNullOrWhiteSpace(groceriesMsg))
+            {
+                <div class="row mt-2">
+                    <div class="col-12 text-center">
+                        <div class="border rounded-1 w-100 text-start text-body dynamic-message-box">
+                            <!-- Collapsible Toggle Header -->
+                             <div class="d-flex align-items-center justify-content-between px-3 py-2" 
+                                 style="cursor: pointer;" 
+                                 data-bs-toggle="collapse" 
+                                 data-bs-target="#dynamicMessageCollapse" 
+                                 aria-expanded="true" 
+                                 aria-controls="dynamicMessageCollapse"
+                                 id="dynamicMessageHeader">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-truck text-success fs-5 me-3"></i>
+                                    <span class="small fw-bold">Delivery & Service Updates</span>
+                                </div>
+                                <i class="bi bi-chevron-down text-muted" id="dynamicMessageChevron"></i>
+                            </div>
+                            
+                            <!-- Collapsible Content Body -->
+                            <div class="collapse show" id="dynamicMessageCollapse">
+                                <div class="px-3 pb-3 pt-1 border-top small fw-semibold message-content">
+                                    @Html.Raw(groceriesMsg)
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 
@@ -268,6 +292,20 @@
 }
 
 <style>
+    .dynamic-message-box .message-content p {
+        margin-bottom: 0;
+    }
+    .dynamic-message-box .message-content ul, 
+    .dynamic-message-box .message-content ol {
+        margin-bottom: 0;
+        padding-left: 1.25rem;
+    }
+    #dynamicMessageChevron {
+        transition: transform 0.2s ease;
+    }
+    #dynamicMessageHeader:not(.collapsed) #dynamicMessageChevron {
+        transform: rotate(180deg);
+    }
     .product-card {
         transition: transform 0.2s, box-shadow 0.2s;
         border-radius: 12px;

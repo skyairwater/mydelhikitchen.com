@@ -1,0 +1,97 @@
+@model EcommerceStore.Models.AppDynamicMessage
+
+@{
+    ViewData["Title"] = "Edit Dynamic Message";
+}
+
+<!-- Include Quill Stylesheets -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Dynamic Messages</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Message</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-primary text-white p-4">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i> Edit Dynamic Message</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="messageForm">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Tag" class="form-label fw-semibold">Tag Name</label>
+                            <input asp-for="Tag" class="form-control form-control-lg" placeholder="e.g., Groceries message" required />
+                            <span asp-validation-for="Tag" class="text-danger"></span>
+                            <div class="form-text">Example: "Groceries message" or "Delivery notice".</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Message Content</label>
+                            <input type="hidden" asp-for="Content" id="hiddenContent" />
+                            
+                            <!-- Quill editor container -->
+                            <div id="editor-container" style="height: 250px;" class="bg-white rounded-3">
+                                @Html.Raw(Model.Content)
+                            </div>
+                            
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                            <div class="form-text">Use the toolbar to style your text. Leaving the content empty will prevent this message from being displayed.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between border-top pt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary px-4"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
+                            <button type="submit" class="btn btn-primary px-5 fw-semibold"><i class="bi bi-save me-1"></i> Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Include the Quill library -->
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+
+    <!-- Initialize Quill editor -->
+    <script>
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'align': [] }],
+                    ['link', 'clean']
+                ]
+            }
+        });
+
+        // Sync Quill HTML content to the hidden field on submit
+        const form = document.getElementById('messageForm');
+        form.onsubmit = function() {
+            // Check if the Quill editor has only empty/whitespace content (Quill default empty is "<p><br></p>")
+            const rawText = quill.getText().trim();
+            const htmlContent = quill.getSemanticHTML();
+            
+            const hiddenContent = document.getElementById('hiddenContent');
+            if (rawText.length === 0) {
+                hiddenContent.value = "";
+            } else {
+                hiddenContent.value = htmlContent;
+            }
+        };
+    </script>
+}

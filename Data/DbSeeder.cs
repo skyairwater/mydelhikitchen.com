@@ -12,6 +12,24 @@ public static class DbSeeder
     {
         await SeedAdminUserAsync(serviceProvider);
         await SeedMaintenanceModesAsync(serviceProvider);
+        await SeedAppDynamicMessagesAsync(serviceProvider);
+    }
+
+    public static async Task SeedAppDynamicMessagesAsync(IServiceProvider serviceProvider)
+    {
+        var db = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        var hasGroceriesMsg = await db.AppDynamicMessages.AnyAsync(m => m.Tag == "Groceries message");
+        if (!hasGroceriesMsg)
+        {
+            db.AppDynamicMessages.Add(new AppDynamicMessage
+            {
+                Tag = "Groceries message",
+                Content = "Free delivery for Delhi Kitchen Customers!",
+                LastUpdated = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
     }
 
     public static async Task SeedMaintenanceModesAsync(IServiceProvider serviceProvider)

@@ -89,6 +89,30 @@ namespace EcommerceStore.Migrations
                     b.ToTable("AdminFoodOrderItems");
                 });
 
+            modelBuilder.Entity("EcommerceStore.Models.AppDynamicMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppDynamicMessages");
+                });
+
             modelBuilder.Entity("EcommerceStore.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
