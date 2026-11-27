@@ -34,7 +34,7 @@
                     }
 
                     <div class="mb-4">
-                        <p class="mb-1 text-muted"><strong>Ordered On:</strong> @Model.OrderDate.ToLocalTime()</p>
+                        <p class="mb-1 text-muted"><strong>Ordered On:</strong> @Model.OrderDate.ToEstFormat()</p>
                         <p class="mb-1 text-muted"><strong>Customer:</strong> @Model.CustomerEmail</p>
                         <p class="mb-1 text-muted"><strong>Phone:</strong> @Model.PhoneNumber</p>
                         <p class="mb-1 text-muted"><strong>Delivery Address:</strong> @Model.DeliveryAddress</p>

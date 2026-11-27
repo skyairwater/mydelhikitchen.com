@@ -2,6 +2,10 @@
 @{
     var adminOrder = ViewBag.AdminOrder as EcommerceStore.Models.AdminFoodOrder;
     ViewData["Title"] = "Customer Orders for #" + (adminOrder?.Id ?? 0);
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    decimal grandTotal = ViewBag.GrandTotal ?? 0m;
+    var allAddresses = ViewBag.AllAddresses as List<string> ?? new List<string>();
 }
 
 <div class="mt-4 mb-4">
@@ -18,14 +22,14 @@
             @if (adminOrder != null)
             {
                 <div class="text-muted small">
-                    <span class="badge bg-dark">Menu Date: @adminOrder.DeliveryDate.ToString("yyyy-MM-dd")</span>
+                    <span class="badge bg-dark">Menu Date: @adminOrder.DeliveryDate.ToString("MM/dd/yyyy")</span>
                 </div>
             }
         </div>
         <div class="d-flex flex-column justify-content-center align-items-end gap-2">
             @if (Model != null && Model.Any())
             {
-                <button type="button" id="copyAddressesBtn" class="btn btn-primary d-flex align-items-center shadow-sm">
+                <button type="button" id="copyAddressesBtn" class="btn btn-primary d-flex align-items-center shadow-sm" data-all-addresses='@System.Text.Json.JsonSerializer.Serialize(allAddresses)'>
                     <i class="bi bi-clipboard-plus me-2"></i> Copy all addresses
                 </button>
                 <a href="https://www.mapquest.com/routeplanner/copy-paste" target="_blank" class="text-decoration-none text-muted small">
@@ -35,6 +39,40 @@
         </div>
     </div>
 </div>
+
+@if (totalPages > 1)
+{
+    <div class="card border-0 shadow-sm mb-3 p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="text-muted small">
+                Showing page <span class="fw-bold">@currentPage</span> of <span class="fw-bold">@totalPages</span> (10 items per page)
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="CustomerOrders" asp-route-id="@adminOrder?.Id" asp-route-page="@(currentPage - 1)"><i class="bi bi-chevron-left"></i> Previous</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        if (i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2))
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="CustomerOrders" asp-route-id="@adminOrder?.Id" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                        else if (i == currentPage - 3 || i == currentPage + 3)
+                        {
+                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                        }
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="CustomerOrders" asp-route-id="@adminOrder?.Id" asp-route-page="@(currentPage + 1)">Next <i class="bi bi-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+}
 
 <div class="table-responsive shadow-sm rounded-3">
     <table class="table table-hover align-middle mb-0">
@@ -70,12 +108,12 @@
                             <span class="badge bg-light text-dark border">@order.MainQuantity</span>
                         </td>
                         <td class="fw-bold">@order.TotalAmount.ToString("C")</td>
-                        <td class="small text-muted">@order.OrderDate.ToLocalTime().ToString("g")</td>
+                        <td class="small text-muted">@order.OrderDate.ToEstFormat()</td>
                         <td>
                             @{
                                 var orderData = new {
                                     order.UniqueOrderId,
-                                    OrderDate = order.OrderDate.ToLocalTime().ToString("g"),
+                                    OrderDate = order.OrderDate.ToEstFormat(),
                                     order.CustomerEmail,
                                     order.PhoneNumber,
                                     order.DeliveryAddress,
@@ -109,13 +147,47 @@
             <tfoot class="table-light">
                 <tr>
                     <td colspan="5" class="text-end fw-bold fs-5">Grand Total for all orders:</td>
-                    <td class="fw-bold fs-5 text-primary">@Model.Sum(o => o.TotalAmount).ToString("C")</td>
+                    <td class="fw-bold fs-5 text-primary">@grandTotal.ToString("C")</td>
                     <td colspan="2"></td>
                 </tr>
             </tfoot>
         }
     </table>
 </div>
+
+@if (totalPages > 1)
+{
+    <div class="card border-0 shadow-sm mt-3 p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="text-muted small">
+                Showing page <span class="fw-bold">@currentPage</span> of <span class="fw-bold">@totalPages</span> (10 items per page)
+            </div>
+            <nav>
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="CustomerOrders" asp-route-id="@adminOrder?.Id" asp-route-page="@(currentPage - 1)"><i class="bi bi-chevron-left"></i> Previous</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        if (i == 1 || i == totalPages || (i >= currentPage - 2 && i <= currentPage + 2))
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="CustomerOrders" asp-route-id="@adminOrder?.Id" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                        else if (i == currentPage - 3 || i == currentPage + 3)
+                        {
+                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                        }
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="CustomerOrders" asp-route-id="@adminOrder?.Id" asp-route-page="@(currentPage + 1)">Next <i class="bi bi-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+}
 
 </div>
 
@@ -229,9 +301,16 @@
         });
 
         document.getElementById('copyAddressesBtn')?.addEventListener('click', function() {
-            const addresses = Array.from(document.querySelectorAll('.customer-address'))
-                                   .map(el => el.getAttribute('title') || el.innerText.trim())
-                                   .filter(addr => addr !== '');
+            let addresses = [];
+            try {
+                addresses = JSON.parse(this.getAttribute('data-all-addresses') || '[]');
+            } catch(e) {}
+
+            if (!addresses || addresses.length === 0) {
+                addresses = Array.from(document.querySelectorAll('.customer-address'))
+                                 .map(el => el.getAttribute('title') || el.innerText.trim())
+                                 .filter(addr => addr !== '');
+            }
             
             const copyContent = addresses.join('\n');
             

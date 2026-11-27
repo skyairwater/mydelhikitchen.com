@@ -75,7 +75,12 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Only enforce HTTPS redirection in Production so local devices (like Android apps) can communicate over plain HTTP
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+app.UseRequestLocalization("en-US");
 app.UseRouting();
 
 // Block direct access to Register page
@@ -102,6 +107,7 @@ app.MapRazorPages()
    .WithStaticAssets();
 
 app.MapHub<EcommerceStore.Hubs.ViewingHub>("/viewingHub");
+app.MapHub<EcommerceStore.Hubs.DeliveryTrackingHub>("/deliveryTrackingHub");
 
 
 

@@ -165,6 +165,7 @@ $(document).ready(function () {
             'fresh-green': { name: 'Fresh Green', color: '#236348' },
             'warm-linen': { name: 'Warm Linen', color: '#B85D3A' },
             'cool-fog': { name: 'Cool Fog', color: '#2C5E8A' },
+            'baby-pink': { name: 'Baby Pink', color: '#C84B70' },
             'dark': { name: 'Midnight Dark', color: '#3ba87c' }
         },
         init() {
@@ -232,6 +233,64 @@ $(document).ready(function () {
             autocomplete.setFields(["address_components", "formatted_address"]);
         }
     }
+
+    // Persist Customer Info (Email & Phone) in localStorage
+    function getCustomerSavedInfo() {
+        if (typeof localStorage === 'undefined') return { email: '', phone: '' };
+        return {
+            email: localStorage.getItem('customer_email') || '',
+            phone: localStorage.getItem('customer_phone') || ''
+        };
+    }
+
+    function saveCustomerSavedInfo(email, phone) {
+        if (typeof localStorage === 'undefined') return;
+        if (email) localStorage.setItem('customer_email', email.trim());
+        if (phone) localStorage.setItem('customer_phone', phone.trim());
+    }
+
+    function populateCustomerSavedFields() {
+        const info = getCustomerSavedInfo();
+        if (info.email) {
+            $('#CustomerEmail, #FoodCustomerEmail').each(function () {
+                if (!$(this).val()) $(this).val(info.email);
+            });
+        }
+        if (info.phone) {
+            $('#PhoneNumber, #FoodPhoneNumber').each(function () {
+                if (!$(this).val()) $(this).val(info.phone);
+            });
+        }
+    }
+
+    // Populate on document ready
+    populateCustomerSavedFields();
+
+    // Populate when checkout modal is opened
+    $('#checkoutModal').on('show.bs.modal', function () {
+        populateCustomerSavedFields();
+    });
+
+    // Save on form submit for Groceries
+    $('#checkout-form').on('submit', function () {
+        saveCustomerSavedInfo($('#CustomerEmail').val(), $('#PhoneNumber').val());
+    });
+
+    // Save on form submit for Food
+    $('#food-checkout-form').on('submit', function () {
+        saveCustomerSavedInfo($('#FoodCustomerEmail').val(), $('#FoodPhoneNumber').val());
+    });
+
+    // Also persist whenever user updates email or phone
+    $('#CustomerEmail, #FoodCustomerEmail').on('change', function () {
+        const val = $(this).val();
+        if (val && typeof localStorage !== 'undefined') localStorage.setItem('customer_email', val.trim());
+    });
+
+    $('#PhoneNumber, #FoodPhoneNumber').on('change', function () {
+        const val = $(this).val();
+        if (val && typeof localStorage !== 'undefined') localStorage.setItem('customer_phone', val.trim());
+    });
 
     themeManager.init();
 });

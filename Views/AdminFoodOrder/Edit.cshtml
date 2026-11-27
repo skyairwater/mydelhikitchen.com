@@ -31,7 +31,10 @@
                             <div class="row g-3 align-items-start mb-3">
                                 <div class="col-md-4">
                                     <label asp-for="DeliveryDate" class="form-label fw-bold"></label>
-                                    <input asp-for="DeliveryDate" type="text" id="datepicker" class="form-control" style="max-width: 220px;" autocomplete="off" />
+                                    <div class="input-group" style="max-width: 220px;">
+                                        <span class="input-group-text bg-light text-primary" style="cursor: pointer;" onclick="$('#datepicker').datepicker('show');"><i class="bi bi-calendar3"></i></span>
+                                        <input asp-for="DeliveryDate" asp-format="{0:MM/dd/yyyy}" type="text" id="datepicker" class="form-control" autocomplete="off" />
+                                    </div>
                                     <span asp-validation-for="DeliveryDate" class="text-danger"></span>
                                 </div>
                                 <div class="col-md-8 pt-md-4">
@@ -120,10 +123,22 @@
                                     <span asp-validation-for="MaxOrders" class="text-danger"></span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <hr class="my-4" />
-                            <h5 class="fw-bold mb-3">Beverages</h5>
-                            <table class="table table-bordered align-middle" id="beverageItemsTable">
+                    <!-- Separate Section: Beverages -->
+                    <div class="card mb-4 border shadow-sm">
+                        <div class="card-header bg-primary text-white py-2 px-3 d-flex align-items-center justify-content-between">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="enableBeveragesCheck" role="switch" @(Model.BeverageItems.Any(i => !string.IsNullOrWhiteSpace(i.Name)) ? "checked" : "") style="cursor: pointer; width: 2.5em; height: 1.25em;">
+                                <label class="form-check-label mb-0 fw-bold text-white ms-2" for="enableBeveragesCheck" style="cursor: pointer;">
+                                    <i class="bi bi-cup-straw me-2"></i>Enable Beverages
+                                </label>
+                            </div>
+                            <span class="text-white-50 small">Turn on to add beverage items</span>
+                        </div>
+                        <div class="card-body p-4" id="beveragesContainer" style="display: none;">
+                            <table class="table table-bordered align-middle mb-0" id="beverageItemsTable">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Beverage Name (Max 500 characters)</th>
@@ -159,10 +174,16 @@
                     </div>
 
                     <div class="card mb-4 border shadow-sm">
-                        <div class="card-header bg-success text-white py-2 px-3">
-                            <h5 class="mb-0 fw-bold"><i class="bi bi-basket2-fill me-2"></i>A la carte</h5>
+                        <div class="card-header bg-success text-white py-2 px-3 d-flex align-items-center justify-content-between">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="enableAlaCarteCheck" role="switch" @(Model.AlaCarteItems.Any(i => !string.IsNullOrWhiteSpace(i.Name)) ? "checked" : "") style="cursor: pointer; width: 2.5em; height: 1.25em;">
+                                <label class="form-check-label mb-0 fw-bold text-white ms-2" for="enableAlaCarteCheck" style="cursor: pointer;">
+                                    <i class="bi bi-basket2-fill me-2"></i>Enable A la carte
+                                </label>
+                            </div>
+                            <span class="text-white-50 small">Turn on to add a la carte items</span>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body p-4" id="alaCarteContainer" style="display: none;">
                             <table class="table table-bordered align-middle mb-0" id="alaCarteItemsTable">
                                 <thead class="table-light">
                                     <tr>
@@ -241,6 +262,11 @@
 
 @section Scripts {
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        #ui-datepicker-div {
+            z-index: 999999 !important;
+        }
+    </style>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.tiny.cloud/1/740hbd15q9g9dmnqf0zkorvvco19h1r2276dsldo8t01ha5i/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
@@ -248,7 +274,12 @@
         $(document).ready(function () {
             // Initialize Datepicker
             $("#datepicker").datepicker({
-                dateFormat: 'yy-mm-dd'
+                dateFormat: 'mm/dd/yy',
+                beforeShow: function (input, inst) {
+                    setTimeout(function () {
+                        $('#ui-datepicker-div').css('z-index', 999999);
+                    }, 0);
+                }
             });
 
             // Initialize TinyMCE
@@ -351,6 +382,36 @@
             }
             $('#AddTaxToCustomers').on('change', updateTaxInputState);
             updateTaxInputState();
+
+            // Toggle Beverages section with switch checkbox
+            function updateBeveragesState() {
+                var isEnabled = $('#enableBeveragesCheck').is(':checked');
+                if (isEnabled) {
+                    $('#beveragesContainer').slideDown(200);
+                    $('#beveragesContainer input').prop('disabled', false);
+                } else {
+                    $('#beveragesContainer').slideUp(200);
+                    $('#beveragesContainer input').val(''); // clear out data
+                    $('#beveragesContainer input').prop('disabled', true);
+                }
+            }
+            $('#enableBeveragesCheck').on('change', updateBeveragesState);
+            updateBeveragesState();
+
+            // Toggle A la Carte section with switch checkbox
+            function updateAlaCarteState() {
+                var isEnabled = $('#enableAlaCarteCheck').is(':checked');
+                if (isEnabled) {
+                    $('#alaCarteContainer').slideDown(200);
+                    $('#alaCarteContainer input').prop('disabled', false);
+                } else {
+                    $('#alaCarteContainer').slideUp(200);
+                    $('#alaCarteContainer input').val(''); // clear out data
+                    $('#alaCarteContainer input').prop('disabled', true);
+                }
+            }
+            $('#enableAlaCarteCheck').on('change', updateAlaCarteState);
+            updateAlaCarteState();
         });
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

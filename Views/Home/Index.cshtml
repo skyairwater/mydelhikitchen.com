@@ -53,26 +53,8 @@
         background-color: var(--card-bg, #ffffff);
         border-radius: 12px;
         backface-visibility: hidden;
+        will-change: transform, opacity;
         transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 1s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    /* Face states: Front (Visible), Out (Rotate up like a box), In (Waiting below) */
-    .cube-face.face-active {
-        transform: translateY(0) rotateX(0deg);
-        opacity: 1;
-        z-index: 2;
-    }
-
-    .cube-face.face-hidden-top {
-        transform: translateY(-100%) rotateX(90deg);
-        opacity: 0;
-        z-index: 1;
-    }
-
-    .cube-face.face-hidden-bottom {
-        transform: translateY(100%) rotateX(-90deg);
-        opacity: 0;
-        z-index: 1;
     }
 
     /* Title */
@@ -81,12 +63,84 @@
         font-size: clamp(26px, 3.5vw, 48px);
         color: var(--text);
         font-weight: 400;
-        letter-spacing: 0.3em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         opacity: 0;
         transform: translateY(22px);
         filter: blur(6px);
         transition: opacity 1.2s ease, transform 1.2s ease, filter 1.2s ease, letter-spacing 1.6s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    /* Rainbow Animated Heading */
+    .rainbow-text {
+        letter-spacing: 0.05em;
+        background: linear-gradient(
+            90deg,
+            #ff2a2a,
+            #ff7300,
+            #ffc800,
+            #10b981,
+            #06b6d4,
+            #3b82f6,
+            #8b5cf6,
+            #ec4899,
+            #ff2a2a
+        );
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: rainbowShine 6s linear infinite;
+        display: inline-block;
+        font-weight: 700;
+        filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.12));
+    }
+
+    @@keyframes rainbowShine {
+        0% {
+            background-position: 0% 50%;
+        }
+        100% {
+            background-position: 300% 50%;
+        }
+    }
+
+    /* Heading Flag Container & Animated Flag SVGs */
+    .heading-flag-wrap {
+        display: inline-block;
+        position: relative;
+        width: clamp(28px, 3.2vw, 44px);
+        height: clamp(19px, 2.2vw, 29px);
+        flex-shrink: 0;
+        letter-spacing: normal;
+        vertical-align: middle;
+    }
+
+    .hero-flag {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+        transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hero-flag-active {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        pointer-events: auto;
+    }
+
+    .hero-flag-hidden {
+        opacity: 0;
+        transform: scale(0.65) translateY(6px);
+        pointer-events: none;
     }
 
     /* Underline stroke */
@@ -100,17 +154,38 @@
         max-width: 380px;
     }
 
-    /* Small tagline (optional but elegant) */
+    /* Tagline */
     .tagline {
-        margin: 12px 0 0;
-        font-family: Arial, sans-serif;
-        font-size: 10px;
-        letter-spacing: 0.3em;
+        margin: 14px 0 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: clamp(14px, 1.3vw, 18px);
+        font-weight: 600;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--primary-color, blue);
+        color: var(--primary-color);
         opacity: 0;
         transform: translateY(10px);
         transition: opacity 1s ease, transform 1s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .heart-emoji {
+        display: inline-block;
+        font-size: 1.15em;
+        animation: heartPulse 1.8s ease-in-out infinite;
+        filter: drop-shadow(0 2px 6px rgba(220, 38, 38, 0.4));
+    }
+
+    @@keyframes heartPulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.25);
+        }
     }
 
     /* Activated state */
@@ -118,7 +193,7 @@
         opacity: 1;
         transform: translateY(0);
         filter: blur(0);
-        letter-spacing: 0.2em;
+        letter-spacing: 0.05em;
     }
 
     .show .rule {
@@ -192,14 +267,54 @@
 
     <div class="wrap" id="wrap">
         <div class="logo-wrap">
-            <div class="cube-container" id="heroCube">
-                <img src="~/images/MyDelhiKitchenIndia.png" alt="My Delhi Kitchen India" class="cube-face face-active" id="cubeFace1" asp-append-version="true" />
-                <img src="~/images/MyDelhiKitchenUptown.png" alt="My Delhi Kitchen Uptown" class="cube-face face-hidden-bottom" id="cubeFace2" asp-append-version="true" />
+            <div class="cube-container" id="heroCube" title="Click to transition image">
+                <img src="~/images/MyDelhiKitchenIndia.png" alt="My Delhi Kitchen India" class="cube-face" id="cubeFace1" asp-append-version="true" style="opacity: 1; transform: translate(0, 0); z-index: 2;" />
+                <img src="~/images/MyDelhiKitchenUptown.png" alt="My Delhi Kitchen Uptown" class="cube-face" id="cubeFace2" asp-append-version="true" style="opacity: 0; transform: translateY(100%) rotateX(-90deg); z-index: 1;" />
             </div>
         </div>
-        <h1 class="title">Delhi Kitchen</h1>
+        <h1 class="title">
+            <span class="rainbow-text">Delhi Kitchen</span>
+            <span class="heading-flag-wrap" id="headingFlagWrap" aria-hidden="true">
+                <!-- India Flag SVG (Displayed when MyDelhiKitchenIndia.png is visible) -->
+                <svg id="heroFlagIndia" class="hero-flag hero-flag-active rounded" viewBox="0 0 900 600" aria-label="India Flag">
+                    <rect width="900" height="200" fill="#FF9933"/>
+                    <rect width="900" height="200" y="200" fill="#FFFFFF"/>
+                    <rect width="900" height="200" y="400" fill="#138808"/>
+                    <!-- Ashoka Chakra -->
+                    <circle cx="450" cy="300" r="80" fill="none" stroke="#000080" stroke-width="8"/>
+                    <circle cx="450" cy="300" r="16" fill="#000080"/>
+                    <path d="M450,220v160 M410,225l80,150 M375,240l150,120 M350,265l200,70 M338,300h224 M350,335l200,-70 M375,360l150,-120 M410,375l80,-150 M490,225l-80,150 M525,240l-150,120 M550,265l-200,70 M550,335l-200,-70" stroke="#000080" stroke-width="3"/>
+                </svg>
+                <!-- American Flag SVG (Displayed when MyDelhiKitchenUptown.png is visible) -->
+                <svg id="heroFlagUS" class="hero-flag hero-flag-hidden rounded" viewBox="0 0 7410 3900" aria-label="US Flag">
+                    <rect width="7410" height="3900" fill="#b22234"/>
+                    <path d="M0,450H7410M0,1050H7410M0,1650H7410M0,2250H7410M0,2850H7410M0,3450H7410" stroke="#fff" stroke-width="300"/>
+                    <rect width="2964" height="2100" fill="#3c3b6e"/>
+                    <g fill="#fff">
+                        <g id="s18_hero">
+                            <g id="s9_hero">
+                                <g id="s5_hero">
+                                    <g id="s4_hero">
+                                        <path id="s_hero" d="M247,90 317,307 134,173H360L177,307z"/>
+                                        <use href="#s_hero" y="420"/>
+                                        <use href="#s_hero" y="840"/>
+                                        <use href="#s_hero" y="1260"/>
+                                    </g>
+                                    <use href="#s_hero" y="1680"/>
+                                </g>
+                                <use href="#s4_hero" x="247" y="210"/>
+                            </g>
+                            <use href="#s9_hero" x="494"/>
+                        </g>
+                        <use href="#s18_hero" x="988"/>
+                        <use href="#s9_hero" x="1976"/>
+                        <use href="#s5_hero" x="2470"/>
+                    </g>
+                </svg>
+            </span>
+        </h1>
         <div class="rule"></div>
-        <p class="tagline">Cloud Kitchen • Since 2026</p>
+        <p class="tagline">Cloud Kitchen <span class="heart-emoji">❤️</span> Since 2026</p>
     </div>
 </div>
 
@@ -208,46 +323,124 @@
       // reveal animation
       setTimeout(() => document.getElementById("wrap").classList.add("show"), 120);
 
-      // 3D Box continuous flip every 4 seconds
       const face1 = document.getElementById("cubeFace1");
       const face2 = document.getElementById("cubeFace2");
-      let currentFace = 1;
+      const flagIndia = document.getElementById("heroFlagIndia");
+      const flagUS = document.getElementById("heroFlagUS");
+      const heroCube = document.getElementById("heroCube");
 
-      setInterval(() => {
-          if (currentFace === 1) {
-              // Face 1 rotates up and hides
-              face1.classList.remove("face-active", "face-hidden-bottom");
-              face1.classList.add("face-hidden-top");
+      let currentFace = 1; // 1 = India, 2 = Uptown
+      let isAnimating = false;
 
-              // Face 2 rotates up from bottom into front view
-              face2.classList.remove("face-hidden-bottom", "face-hidden-top");
-              face2.classList.add("face-active");
-
-              // Prepare face 1 to come back from bottom on next turn
-              setTimeout(() => {
-                  face1.classList.remove("face-hidden-top");
-                  face1.classList.add("face-hidden-bottom");
-              }, 1000);
-
-              currentFace = 2;
-          } else {
-              // Face 2 rotates up and hides
-              face2.classList.remove("face-active", "face-hidden-bottom");
-              face2.classList.add("face-hidden-top");
-
-              // Face 1 rotates up from bottom into front view
-              face1.classList.remove("face-hidden-bottom", "face-hidden-top");
-              face1.classList.add("face-active");
-
-              // Prepare face 2 to come back from bottom on next turn
-              setTimeout(() => {
-                  face2.classList.remove("face-hidden-top");
-                  face2.classList.add("face-hidden-bottom");
-              }, 1000);
-
-              currentFace = 1;
+      // Varied cinematic 3D animations that rotate sequentially
+      const transitions = [
+          {
+              // 1. Horizontal 3D Cube Flip (Right to Left)
+              outStyle: "translateX(-100%) rotateY(-90deg)",
+              inStart: "translateX(100%) rotateY(90deg)"
+          },
+          {
+              // 2. Vertical 3D Cube Flip (Bottom to Top)
+              outStyle: "translateY(-100%) rotateX(90deg)",
+              inStart: "translateY(100%) rotateX(-90deg)"
+          },
+          {
+              // 3. 3D Card / Perspective Spin
+              outStyle: "rotateY(180deg) scale(0.85)",
+              inStart: "rotateY(-180deg) scale(0.85)"
+          },
+          {
+              // 4. Horizontal 3D Cube Flip (Left to Right)
+              outStyle: "translateX(100%) rotateY(90deg)",
+              inStart: "translateX(-100%) rotateY(-90deg)"
+          },
+          {
+              // 5. Cinematic Depth Zoom & Subtle Angle Twist
+              outStyle: "scale(1.2) rotate(3deg)",
+              inStart: "scale(0.8) rotate(-3deg)"
+          },
+          {
+              // 6. Vertical 3D Cube Flip (Top to Bottom)
+              outStyle: "translateY(100%) rotateX(-90deg)",
+              inStart: "translateY(-100%) rotateX(90deg)"
+          },
+          {
+              // 7. Diagonal 3D Origami Fold
+              outStyle: "translate(-25%, -25%) rotate3d(1, 1, 0, 65deg) scale(0.88)",
+              inStart: "translate(25%, 25%) rotate3d(1, 1, 0, -65deg) scale(0.88)"
           }
-      }, 4000);
+      ];
+
+      let transitionIndex = 0;
+
+      function triggerFlip() {
+          if (isAnimating) return;
+          isAnimating = true;
+
+          const currentEl = currentFace === 1 ? face1 : face2;
+          const nextEl = currentFace === 1 ? face2 : face1;
+          const nextFace = currentFace === 1 ? 2 : 1;
+
+          const t = transitions[transitionIndex];
+          transitionIndex = (transitionIndex + 1) % transitions.length;
+
+          // Prepare incoming element in starting position without animation
+          nextEl.style.transition = "none";
+          nextEl.style.transform = t.inStart;
+          nextEl.style.opacity = "0";
+          nextEl.style.zIndex = "2";
+
+          // Force reflow
+          void nextEl.offsetWidth;
+
+          // Smoothly animate both elements simultaneously
+          const animTiming = "transform 1s cubic-bezier(0.65, 0, 0.35, 1), opacity 1s cubic-bezier(0.65, 0, 0.35, 1)";
+          currentEl.style.transition = animTiming;
+          nextEl.style.transition = animTiming;
+
+          currentEl.style.transform = t.outStyle;
+          currentEl.style.opacity = "0";
+          currentEl.style.zIndex = "1";
+
+          nextEl.style.transform = "translate(0, 0) rotate(0deg) rotateX(0deg) rotateY(0deg) scale(1)";
+          nextEl.style.opacity = "1";
+
+          // Synchronize the flag next to Delhi Kitchen heading
+          if (flagIndia && flagUS) {
+              if (nextFace === 1) {
+                  // India active -> India flag
+                  flagUS.classList.remove("hero-flag-active");
+                  flagUS.classList.add("hero-flag-hidden");
+                  flagIndia.classList.remove("hero-flag-hidden");
+                  flagIndia.classList.add("hero-flag-active");
+              } else {
+                  // Uptown active -> American flag
+                  flagIndia.classList.remove("hero-flag-active");
+                  flagIndia.classList.add("hero-flag-hidden");
+                  flagUS.classList.remove("hero-flag-hidden");
+                  flagUS.classList.add("hero-flag-active");
+              }
+          }
+
+          currentFace = nextFace;
+
+          setTimeout(() => {
+              isAnimating = false;
+          }, 1050);
+      }
+
+      // Automatically change every 4 seconds
+      let intervalId = setInterval(triggerFlip, 4000);
+
+      // Also allow clicking the image to immediately trigger the next dynamic animation
+      if (heroCube) {
+          heroCube.style.cursor = "pointer";
+          heroCube.addEventListener("click", () => {
+              clearInterval(intervalId);
+              triggerFlip();
+              intervalId = setInterval(triggerFlip, 4000);
+          });
+      }
     });
 </script>
 

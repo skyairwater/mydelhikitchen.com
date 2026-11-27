@@ -160,7 +160,7 @@ namespace EcommerceStore.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> AdminIndex(int page = 1)
         {
-            int pageSize = 50;
+            int pageSize = 10;
             var ordersQuery = _context.Orders.OrderByDescending(o => o.OrderDate);
             
             var totalOrders = await ordersQuery.CountAsync();
@@ -171,6 +171,7 @@ namespace EcommerceStore.Controllers
 
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalOrders / pageSize);
+            ViewBag.TotalOrders = totalOrders;
 
             return View(orders);
         }

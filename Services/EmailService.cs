@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using EcommerceStore.Models;
+using EcommerceStore.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace EcommerceStore.Services
@@ -41,6 +42,7 @@ namespace EcommerceStore.Services
                         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center;'>
                             <p style='margin: 0; color: #6c757d;'>Your unique Order ID is:</p>
                             <h2 style='margin: 5px 0; color: #0d6efd;'>{order.UniqueOrderId}</h2>
+                            <p style='margin: 5px 0 0 0; color: #6c757d; font-size: 0.9em;'>Order Date: {order.OrderDate.ToEstFormat()}</p>
                         </div>
 
                         <div style='margin-bottom: 20px;'>
@@ -88,20 +90,26 @@ namespace EcommerceStore.Services
 
         public async Task SendFoodOrderConfirmationEmailAsync(CustomerFoodOrder order)
         {
-            var subject = $"Food Order Confirmation - {order.UniqueOrderId}";
+            var subject = $"Food Order Received - {order.UniqueOrderId}";
+            var deliveryDateStr = order.AdminFoodOrder != null 
+                ? order.AdminFoodOrder.DeliveryDate.ToString("MMMM dd, yyyy") 
+                : "Scheduled Date";
             
             var body = $@"
                 <html>
                 <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                     <div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
                         <div style='text-align: center; margin-bottom: 20px;'>
-                            <h1 style='color: #198754;'>Food Order Confirmed!</h1>
-                            <p style='font-size: 1.2em;'>Get ready for a delicious meal from Delhi Kitchen.</p>
+                            <h1 style='color: #198754; margin-bottom: 8px;'>Food Order Received</h1>
+                            <p style='font-size: 1.1em; color: #1b5e20; font-weight: bold; margin: 8px 0;'>If you have not yet paid, please pay cash or zelle to Pinki Basra 980.370.1091</p>
+                            <p style='font-size: 1.0em; color: #6c757d; margin: 4px 0 0 0;'>Get ready for a delicious meal from Delhi Kitchen.</p>
                         </div>
                         
                         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center;'>
                             <p style='margin: 0; color: #6c757d;'>Your unique Order ID is:</p>
                             <h2 style='margin: 5px 0; color: #198754;'>{order.UniqueOrderId}</h2>
+                            <p style='margin: 8px 0 0 0; color: #198754; font-weight: bold; font-size: 1.1em;'>Delivery Date: {deliveryDateStr}</p>
+                            <p style='margin: 5px 0 0 0; color: #6c757d; font-size: 0.9em;'>Order Date: {order.OrderDate.ToEstFormat()}</p>
                             <h3 style='margin: 5px 0; color: #333;'>Total: {order.TotalAmount.ToString("C")}</h3>
                         </div>
 
@@ -119,7 +127,7 @@ namespace EcommerceStore.Services
                         <div style='text-align: center; margin: 30px 0;'>
                             <a href='{_settings.BaseUrl}/Food/Confirmation/{order.UniqueOrderId}' 
                                style='background-color: #198754; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>
-                               View Order Receipt
+                               View Order Details and Pick up location
                             </a>
                         </div>
 

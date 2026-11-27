@@ -26,37 +26,70 @@ namespace EcommerceStore.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
-            var adminOrders = await _context.AdminFoodOrders
+            int pageSize = 10;
+            if (page < 1) page = 1;
+
+            var query = _context.AdminFoodOrders
                 .Include(o => o.Items)
-                .OrderByDescending(o => o.CreatedAt)
+                .OrderByDescending(o => o.CreatedAt);
+
+            var totalItems = await query.CountAsync();
+            var adminOrders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            // Fetch counts of customer orders for each admin order
+            // Fetch counts of customer orders for each admin order on the page
+            var adminOrderIds = adminOrders.Select(o => o.Id).ToList();
             var counts = await _context.CustomerFoodOrders
+                .Where(o => adminOrderIds.Contains(o.AdminFoodOrderId))
                 .GroupBy(o => o.AdminFoodOrderId)
                 .Select(g => new { Id = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.Id, x => x.Count);
 
             ViewBag.CustomerOrderCounts = counts;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            ViewBag.TotalItems = totalItems;
 
             return View(adminOrders);
         }
 
         [HttpGet]
-        public async Task<IActionResult> CustomerOrders(int id)
+        public async Task<IActionResult> CustomerOrders(int id, int page = 1)
         {
             var adminOrder = await _context.AdminFoodOrders.FindAsync(id);
             if (adminOrder == null) return NotFound();
 
-            var orders = await _context.CustomerFoodOrders
+            int pageSize = 10;
+            if (page < 1) page = 1;
+
+            var query = _context.CustomerFoodOrders
                 .Include(o => o.AlaCarteItems)
                 .Where(o => o.AdminFoodOrderId == id)
-                .OrderByDescending(o => o.OrderDate)
+                .OrderByDescending(o => o.OrderDate);
+
+            var totalOrders = await query.CountAsync();
+            var grandTotal = await query.SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+            var allAddresses = await _context.CustomerFoodOrders
+                .Where(o => o.AdminFoodOrderId == id && !string.IsNullOrWhiteSpace(o.DeliveryAddress))
+                .Select(o => o.DeliveryAddress)
+                .ToListAsync();
+
+            var orders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             ViewBag.AdminOrder = adminOrder;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalOrders / pageSize);
+            ViewBag.TotalOrders = totalOrders;
+            ViewBag.GrandTotal = grandTotal;
+            ViewBag.AllAddresses = allAddresses;
+
             return View(orders);
         }
 

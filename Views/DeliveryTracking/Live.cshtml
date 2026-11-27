@@ -1,0 +1,733 @@
+@{
+    var initialCategory = (ViewData["DeliveryType"] as string) ?? "All";
+    ViewData["Title"] = initialCategory == "All" 
+        ? "Live Delivery Fleet Tracking" 
+        : $"{initialCategory} Delivery - Live Fleet Tracking";
+}
+
+<div class="container-fluid py-4 px-md-4">
+    <!-- Header banner -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+            <h2 class="h3 fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-geo-alt-fill text-danger"></i>
+                <span>Live Fleet Tracking</span>
+                <span id="activeCountBadge" class="badge rounded-pill bg-primary fs-6">0 Drivers Active</span>
+            </h2>
+            <p class="text-muted small mb-0">
+                Real-time multi-driver dispatch & route tracking for Food and Grocery deliveries.
+            </p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span id="connectionBadge" class="badge bg-secondary p-2 d-inline-flex align-items-center gap-1">
+                <span class="spinner-grow spinner-grow-sm text-light" style="width: 0.7rem; height: 0.7rem;" role="status"></span>
+                <span>Connecting to Hub...</span>
+            </span>
+            <button id="btnFitAllDrivers" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" disabled>
+                <i class="bi bi-arrows-fullscreen"></i> Fit All Drivers
+            </button>
+            <div class="form-check form-switch d-inline-flex align-items-center ms-1">
+                <input class="form-check-input" type="checkbox" id="toggleTrailCheck" checked>
+                <label class="form-check-label small ms-1" for="toggleTrailCheck">Trails</label>
+            </div>
+            <button id="btnClearAllTrails" class="btn btn-outline-secondary btn-sm" title="Clear breadcrumb trails">
+                <i class="bi bi-eraser"></i> Clear Trails
+            </button>
+            <button id="btnResetAll" class="btn btn-outline-danger btn-sm" title="Clear all active drivers from server">
+                <i class="bi bi-trash"></i> Reset Fleet
+            </button>
+        </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <ul class="nav nav-pills mb-3 border-bottom pb-2" id="deliveryCategoryTabs">
+        <li class="nav-item">
+            <button class="nav-link @(initialCategory.Equals("All", StringComparison.OrdinalIgnoreCase) ? "active" : "") fw-semibold" data-category="All">
+                <i class="bi bi-grid-fill me-1"></i> All Drivers (<span id="countAll">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(initialCategory.Equals("Food", StringComparison.OrdinalIgnoreCase) ? "active" : "") fw-semibold text-warning-emphasis" data-category="Food">
+                <i class="bi bi-car-front-fill me-1 text-danger"></i> 🚗 Food Delivery (<span id="countFood">0</span>)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(initialCategory.Equals("Grocery", StringComparison.OrdinalIgnoreCase) ? "active" : "") fw-semibold text-success" data-category="Grocery">
+                <i class="bi bi-basket-fill me-1 text-success"></i> 🛒 Grocery Delivery (<span id="countGrocery">0</span>)
+            </button>
+        </li>
+    </ul>
+
+    <!-- Main Content Grid -->
+    <div class="row g-3">
+        <!-- Interactive Map Container -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="card shadow-sm border-0 h-100 overflow-hidden" style="min-height: 560px;">
+                <div class="card-body p-0 position-relative">
+                    <div id="driverMap" style="width: 100%; height: 600px; z-index: 1;"></div>
+                    
+                    <!-- Floating overlay for status -->
+                    <div class="position-absolute top-0 start-0 m-3 p-2 bg-body rounded shadow-sm border" style="z-index: 999; max-width: 300px; font-size: 0.85rem; opacity: 0.95;">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <strong class="text-primary"><i class="bi bi-broadcast"></i> Dispatch Radar</strong>
+                            <span id="lastPingText" class="text-muted">Awaiting signal</span>
+                        </div>
+                        <div id="quickStatusAlert" class="small text-secondary">
+                            Connect Android companion apps to see live vehicles on map.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telemetry & Active Drivers Panel -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="d-flex flex-column gap-3">
+                <!-- Active Drivers List Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold"><i class="bi bi-truck me-1"></i> Active Drivers</span>
+                        <span id="activeCountHeader" class="badge bg-light text-dark">0 Online</span>
+                    </div>
+                    <div class="card-body p-2" style="max-height: 380px; overflow-y: auto;">
+                        <div id="noDriversPlaceholder" class="text-center py-4 text-muted">
+                            <i class="bi bi-broadcast fs-1 text-secondary opacity-50 d-block mb-2"></i>
+                            <div class="fw-semibold">No active drivers</div>
+                            <small class="text-muted d-block mt-1">Start sharing from the Android companion app on each phone.</small>
+                        </div>
+                        <div id="driverCardList" class="d-flex flex-column gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Android Setup Card with Host IP -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-body-tertiary py-2">
+                        <span class="fw-semibold small"><i class="bi bi-phone me-1"></i> Driver App Setup</span>
+                    </div>
+                    <div class="card-body small">
+                        <p class="text-muted mb-1">Server Endpoint URL for both phones:</p>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" id="apiEndpointUrl" class="form-control font-monospace text-primary fw-bold" value="http://192.168.1.94:5140/api/tracking/location" readonly />
+                            <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('apiEndpointUrl').value); alert('Copied endpoint URL!');">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <div class="alert alert-info py-1 px-2 mb-0" style="font-size: 0.76rem;">
+                            <i class="bi bi-info-circle-fill me-1"></i> In the app, select <strong>Food</strong> or <strong>Grocery</strong> and set a unique driver name for each phone.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Driver Live Simulator -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-body-tertiary py-2 d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small"><i class="bi bi-play-circle me-1"></i> Dual-Driver Simulator</span>
+                        <span class="badge bg-secondary-subtle text-secondary small">Demo</span>
+                    </div>
+                    <div class="card-body small">
+                        <p class="text-muted mb-2" style="font-size: 0.8rem;">
+                            Simulate both a Food Driver and a Grocery Driver running independent routes right now:
+                        </p>
+                        <div class="d-grid gap-2">
+                            <button id="btnSimFood" class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center gap-1">
+                                <i class="bi bi-car-front-fill"></i> <span>Toggle Food Driver (Alex)</span>
+                            </button>
+                            <button id="btnSimGrocery" class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center gap-1">
+                                <i class="bi bi-basket-fill"></i> <span>Toggle Grocery Driver (Sam)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet & SignalR Styles & Scripts -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+<style>
+    /* Custom Driver Pin Markers with Floating Labels */
+    .driver-marker-container {
+        position: relative;
+        text-align: center;
+    }
+    .driver-pin-bubble {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 18px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+        border: 2.5px solid #fff;
+        transition: transform 0.3s ease;
+    }
+    .driver-pin-bubble.food {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+    }
+    .driver-pin-bubble.grocery {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+    .driver-pin-bubble.general {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+    .driver-tag-label {
+        position: absolute;
+        bottom: 42px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.9);
+        color: #fff;
+        padding: 2px 7px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .driver-tag-label.food {
+        border-bottom: 2px solid #f97316;
+    }
+    .driver-tag-label.grocery {
+        border-bottom: 2px solid #10b981;
+    }
+    .pulse-ring-anim {
+        position: absolute;
+        top: -6px;
+        left: -6px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        animation: pulseAnimation 2s infinite ease-out;
+        pointer-events: none;
+    }
+    .pulse-ring-anim.food {
+        border: 3px solid rgba(239, 68, 68, 0.6);
+    }
+    .pulse-ring-anim.grocery {
+        border: 3px solid rgba(16, 185, 129, 0.6);
+    }
+    .pulse-ring-anim.general {
+        border: 3px solid rgba(59, 130, 246, 0.6);
+    }
+    @@keyframes pulseAnimation {
+        0% { transform: scale(0.6); opacity: 1; }
+        100% { transform: scale(1.6); opacity: 0; }
+    }
+    .driver-card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
+    }
+    .driver-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Active delivery category filter: "All", "Food", "Grocery"
+        let currentFilter = "@initialCategory";
+
+        // Map initialization
+        const map = L.map('driverMap', {
+            center: [35.2271, -80.8431], // Default Charlotte NC
+            zoom: 13,
+            zoomControl: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Multi-driver registry
+        // Key: driverId (lowercase)
+        // Value: { id, name, deliveryType, lat, lng, speed, bearing, accuracy, battery, lastSeen, marker, circle, polyline, trailPoints }
+        const drivers = {};
+
+        // DOM elements
+        const connectionBadge = document.getElementById("connectionBadge");
+        const activeCountBadge = document.getElementById("activeCountBadge");
+        const activeCountHeader = document.getElementById("activeCountHeader");
+        const countAll = document.getElementById("countAll");
+        const countFood = document.getElementById("countFood");
+        const countGrocery = document.getElementById("countGrocery");
+        const noDriversPlaceholder = document.getElementById("noDriversPlaceholder");
+        const driverCardList = document.getElementById("driverCardList");
+        const lastPingText = document.getElementById("lastPingText");
+        const quickStatusAlert = document.getElementById("quickStatusAlert");
+        const btnFitAllDrivers = document.getElementById("btnFitAllDrivers");
+        const btnClearAllTrails = document.getElementById("btnClearAllTrails");
+        const toggleTrailCheck = document.getElementById("toggleTrailCheck");
+        const btnResetAll = document.getElementById("btnResetAll");
+
+        // Helper to format category class
+        function getCategoryType(cat) {
+            if (!cat) return "general";
+            const c = cat.toLowerCase();
+            if (c.includes("food") || c.includes("catering") || c.includes("meal")) return "food";
+            if (c.includes("groc") || c.includes("market") || c.includes("mart")) return "grocery";
+            return "general";
+        }
+
+        function getCategoryColor(type) {
+            if (type === "food") return "#f97316";
+            if (type === "grocery") return "#10b981";
+            return "#3b82f6";
+        }
+
+        function createDriverIcon(name, categoryType, bearing) {
+            const iconName = categoryType === "food" ? "bi-car-front-fill" : (categoryType === "grocery" ? "bi-basket-fill" : "bi-truck");
+            const rotateStyle = (typeof bearing === "number") ? `transform: rotate(${bearing}deg);` : "";
+            
+            return L.divIcon({
+                className: 'driver-marker-container',
+                html: `
+                    <div class="pulse-ring-anim ${categoryType}"></div>
+                    <div class="driver-tag-label ${categoryType}">${escapeHtml(name)}</div>
+                    <div class="driver-pin-bubble ${categoryType}" style="${rotateStyle}">
+                        <i class="bi ${iconName}"></i>
+                    </div>
+                `,
+                iconSize: [38, 38],
+                iconAnchor: [19, 19],
+                popupAnchor: [0, -28]
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Handle single driver update
+        function processLocationUpdate(data) {
+            if (!data) return;
+
+            // Handle global clear or driver stopped
+            if (data.driverId === "ALL" && data.isSharing === false) {
+                // Clear all drivers
+                Object.keys(drivers).forEach(key => removeDriverFromMap(key));
+                updateCountsAndSidebar();
+                return;
+            }
+
+            const driverKey = (data.driverId || "Driver 1").trim().toLowerCase();
+            const driverName = data.driverId || "Driver 1";
+
+            // If driver pressed Stop Sharing
+            if (data.isSharing === false) {
+                removeDriverFromMap(driverKey);
+                updateCountsAndSidebar();
+                return;
+            }
+
+            if (typeof data.latitude !== "number" || typeof data.longitude !== "number" || (data.latitude === 0 && data.longitude === 0)) {
+                return;
+            }
+
+            const lat = data.latitude;
+            const lng = data.longitude;
+            const catType = getCategoryType(data.deliveryType);
+            const catColor = getCategoryColor(catType);
+            const now = new Date();
+
+            let driverObj = drivers[driverKey];
+
+            if (!driverObj) {
+                // NEW DRIVER: Create marker, circle, polyline
+                const polyline = L.polyline([], {
+                    color: catColor,
+                    weight: 4,
+                    opacity: 0.75,
+                    smoothFactor: 1
+                });
+
+                if (toggleTrailCheck.checked) {
+                    polyline.addTo(map);
+                }
+
+                const marker = L.marker([lat, lng], {
+                    icon: createDriverIcon(driverName, catType, data.bearing)
+                }).addTo(map);
+
+                const circleRadius = (typeof data.accuracy === "number" && data.accuracy > 0) ? data.accuracy : 15;
+                const circle = L.circle([lat, lng], {
+                    radius: circleRadius,
+                    color: catColor,
+                    fillColor: catColor,
+                    fillOpacity: 0.15,
+                    weight: 1
+                }).addTo(map);
+
+                driverObj = {
+                    key: driverKey,
+                    name: driverName,
+                    deliveryType: data.deliveryType || (catType === "food" ? "Food" : "Grocery"),
+                    catType: catType,
+                    color: catColor,
+                    lat: lat,
+                    lng: lng,
+                    speed: data.speed,
+                    bearing: data.bearing,
+                    accuracy: data.accuracy,
+                    battery: data.batteryLevel,
+                    lastSeen: now,
+                    marker: marker,
+                    circle: circle,
+                    polyline: polyline,
+                    trailPoints: []
+                };
+
+                drivers[driverKey] = driverObj;
+
+                // Center view if first driver
+                if (Object.keys(drivers).length === 1) {
+                    map.setView([lat, lng], 15);
+                }
+            } else {
+                // EXISTING DRIVER: Update coordinates & telemetry
+                driverObj.lat = lat;
+                driverObj.lng = lng;
+                driverObj.speed = data.speed;
+                driverObj.bearing = data.bearing;
+                driverObj.accuracy = data.accuracy;
+                driverObj.battery = data.batteryLevel;
+                driverObj.lastSeen = now;
+                if (data.deliveryType) {
+                    driverObj.deliveryType = data.deliveryType;
+                    driverObj.catType = catType;
+                    driverObj.color = catColor;
+                }
+
+                // Update marker position & icon rotation
+                driverObj.marker.setLatLng([lat, lng]);
+                driverObj.marker.setIcon(createDriverIcon(driverObj.name, driverObj.catType, data.bearing));
+
+                // Update circle
+                const circleRadius = (typeof data.accuracy === "number" && data.accuracy > 0) ? data.accuracy : 15;
+                driverObj.circle.setLatLng([lat, lng]);
+                driverObj.circle.setRadius(circleRadius);
+            }
+
+            // Update Popup content
+            const speedMph = (typeof driverObj.speed === "number" && driverObj.speed >= 0)
+                ? `${(driverObj.speed * 2.23694).toFixed(1)} mph`
+                : "0.0 mph";
+            const accuracyStr = driverObj.accuracy ? `±${driverObj.accuracy.toFixed(1)}m` : "GPS Fix";
+            const batteryStr = driverObj.battery ? `${driverObj.battery}%` : "N/A";
+            const badgeClass = driverObj.catType === "food" ? "bg-danger" : "bg-success";
+
+            driverObj.marker.bindPopup(`
+                <div style="min-width: 170px;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>${escapeHtml(driverObj.name)}</strong>
+                        <span class="badge ${badgeClass}">${driverObj.deliveryType}</span>
+                    </div>
+                    <div class="small text-secondary mb-1">
+                        <div><i class="bi bi-speedometer2"></i> ${speedMph}</div>
+                        <div><i class="bi bi-crosshair"></i> Accuracy: ${accuracyStr}</div>
+                        <div><i class="bi bi-battery-charging"></i> Battery: ${batteryStr}</div>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.75rem;">Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}</div>
+                </div>
+            `);
+
+            // Smart Trail Logic for this driver:
+            const isVehicleMoving = typeof data.speed === "number" && data.speed > 1.2;
+            if (driverObj.trailPoints.length === 0) {
+                if (isVehicleMoving) {
+                    driverObj.trailPoints.push([lat, lng]);
+                    driverObj.polyline.setLatLngs(driverObj.trailPoints);
+                }
+            } else {
+                const lastPt = driverObj.trailPoints[driverObj.trailPoints.length - 1];
+                const distanceMoved = map.distance(lastPt, [lat, lng]);
+
+                if (distanceMoved > 250) {
+                    // Teleport/jump reset
+                    driverObj.trailPoints = isVehicleMoving ? [[lat, lng]] : [];
+                    driverObj.polyline.setLatLngs(driverObj.trailPoints);
+                } else if (isVehicleMoving && distanceMoved >= 10) {
+                    driverObj.trailPoints.push([lat, lng]);
+                    driverObj.polyline.setLatLngs(driverObj.trailPoints);
+                }
+            }
+
+            // Apply category filter visibility
+            applyFilterToDriver(driverObj);
+
+            // Update Counts and UI elements
+            updateCountsAndSidebar();
+
+            lastPingText.textContent = `Ping from ${driverName}`;
+            quickStatusAlert.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-broadcast"></i> Live updates flowing</span> • ${Object.keys(drivers).length} active vehicle(s)`;
+        }
+
+        function removeDriverFromMap(key) {
+            const d = drivers[key];
+            if (!d) return;
+            if (d.marker) map.removeLayer(d.marker);
+            if (d.circle) map.removeLayer(d.circle);
+            if (d.polyline) map.removeLayer(d.polyline);
+            delete drivers[key];
+        }
+
+        function applyFilterToDriver(driverObj) {
+            const isMatch = (currentFilter === "All" || driverObj.catType.toLowerCase() === currentFilter.toLowerCase());
+            if (isMatch) {
+                if (!map.hasLayer(driverObj.marker)) map.addLayer(driverObj.marker);
+                if (!map.hasLayer(driverObj.circle)) map.addLayer(driverObj.circle);
+                if (toggleTrailCheck.checked && !map.hasLayer(driverObj.polyline)) map.addLayer(driverObj.polyline);
+            } else {
+                if (map.hasLayer(driverObj.marker)) map.removeLayer(driverObj.marker);
+                if (map.hasLayer(driverObj.circle)) map.removeLayer(driverObj.circle);
+                if (map.hasLayer(driverObj.polyline)) map.removeLayer(driverObj.polyline);
+            }
+        }
+
+        function applyFilterToAll() {
+            Object.values(drivers).forEach(d => applyFilterToDriver(d));
+            updateCountsAndSidebar();
+        }
+
+        function updateCountsAndSidebar() {
+            const allList = Object.values(drivers);
+            const foodList = allList.filter(d => d.catType === "food");
+            const groceryList = allList.filter(d => d.catType === "grocery");
+
+            countAll.textContent = allList.length;
+            countFood.textContent = foodList.length;
+            countGrocery.textContent = groceryList.length;
+
+            const visibleList = (currentFilter === "All") 
+                ? allList 
+                : allList.filter(d => d.catType.toLowerCase() === currentFilter.toLowerCase());
+
+            activeCountBadge.textContent = `${visibleList.length} Active in ${currentFilter}`;
+            activeCountHeader.textContent = `${allList.length} Online`;
+
+            btnFitAllDrivers.disabled = visibleList.length === 0;
+
+            if (visibleList.length === 0) {
+                noDriversPlaceholder.style.display = "block";
+                driverCardList.innerHTML = "";
+                return;
+            }
+
+            noDriversPlaceholder.style.display = "none";
+            driverCardList.innerHTML = "";
+
+            visibleList.forEach(d => {
+                const card = document.createElement("div");
+                card.className = "card border driver-card p-2 shadow-sm";
+                const badgeColor = d.catType === "food" ? "bg-danger" : (d.catType === "grocery" ? "bg-success" : "bg-primary");
+                const speedMph = (typeof d.speed === "number" && d.speed >= 0) ? (d.speed * 2.23694).toFixed(1) : "0.0";
+                const batteryText = d.battery ? `${d.battery}%` : "N/A";
+                const diffSec = Math.floor((new Date() - d.lastSeen) / 1000);
+                const pingAge = diffSec < 5 ? "Just now" : `${diffSec}s ago`;
+
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="d-flex align-items-center gap-1">
+                            <span class="badge ${badgeColor} p-1"><i class="bi ${d.catType === "food" ? "bi-car-front-fill" : "bi-basket-fill"}"></i></span>
+                            <span>${escapeHtml(d.name)}</span>
+                        </strong>
+                        <span class="badge bg-light text-dark border">${d.deliveryType}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mb-2" style="font-size: 0.78rem;">
+                        <span><i class="bi bi-speedometer2"></i> ${speedMph} mph</span>
+                        <span><i class="bi bi-battery-charging"></i> ${batteryText}</span>
+                        <span><i class="bi bi-clock"></i> ${pingAge}</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary py-0 w-100" style="font-size: 0.78rem;" onclick="centerMapOnDriver('${d.key}')">
+                        <i class="bi bi-crosshair"></i> Focus on Map
+                    </button>
+                `;
+                driverCardList.appendChild(card);
+            });
+        }
+
+        // Global function to center on a driver
+        window.centerMapOnDriver = function(driverKey) {
+            const d = drivers[driverKey];
+            if (d) {
+                map.flyTo([d.lat, d.lng], 16, { animate: true, duration: 1 });
+                d.marker.openPopup();
+            }
+        };
+
+        // Category Tab switching
+        document.querySelectorAll("#deliveryCategoryTabs button").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.querySelectorAll("#deliveryCategoryTabs button").forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+                currentFilter = this.getAttribute("data-category");
+                applyFilterToAll();
+            });
+        });
+
+        // Fit all visible drivers button
+        btnFitAllDrivers.addEventListener("click", function () {
+            const visible = Object.values(drivers).filter(d => 
+                currentFilter === "All" || d.catType.toLowerCase() === currentFilter.toLowerCase()
+            );
+            if (visible.length === 0) return;
+            if (visible.length === 1) {
+                map.flyTo([visible[0].lat, visible[0].lng], 16);
+            } else {
+                const group = L.featureGroup(visible.map(d => d.marker));
+                map.fitBounds(group.getBounds().pad(0.15));
+            }
+        });
+
+        // Trail Toggle Switch
+        toggleTrailCheck.addEventListener("change", function () {
+            const isChecked = this.checked;
+            Object.values(drivers).forEach(d => {
+                if (isChecked && (currentFilter === "All" || d.catType.toLowerCase() === currentFilter.toLowerCase())) {
+                    if (!map.hasLayer(d.polyline)) map.addLayer(d.polyline);
+                } else {
+                    if (map.hasLayer(d.polyline)) map.removeLayer(d.polyline);
+                }
+            });
+        });
+
+        // Clear All Trails
+        btnClearAllTrails.addEventListener("click", function () {
+            Object.values(drivers).forEach(d => {
+                d.trailPoints = [];
+                d.polyline.setLatLngs([]);
+            });
+        });
+
+        // Reset Fleet Button
+        btnResetAll.addEventListener("click", function () {
+            if (confirm("Reset and clear all active drivers from the map cache?")) {
+                fetch('/api/tracking/clear', { method: 'POST' })
+                    .then(() => {
+                        Object.keys(drivers).forEach(key => removeDriverFromMap(key));
+                        updateCountsAndSidebar();
+                    });
+            }
+        });
+
+        // SignalR Connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/deliveryTrackingHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveLocation", function (data) {
+            processLocationUpdate(data);
+        });
+
+        connection.start()
+            .then(function () {
+                connectionBadge.className = "badge bg-success p-2 d-inline-flex align-items-center gap-1";
+                connectionBadge.innerHTML = `<i class="bi bi-wifi"></i> <span>Connected to Live Hub</span>`;
+
+                // Fetch initial active drivers from REST endpoint
+                fetch('/api/tracking/active')
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success && Array.isArray(res.data)) {
+                            res.data.forEach(item => processLocationUpdate(item));
+                        }
+                    })
+                    .catch(e => console.log("Error loading active drivers:", e));
+            })
+            .catch(function (err) {
+                console.error("SignalR connection error: ", err);
+                connectionBadge.className = "badge bg-warning text-dark p-2 d-inline-flex align-items-center gap-1";
+                connectionBadge.innerHTML = `<i class="bi bi-exclamation-triangle"></i> <span>Reconnecting...</span>`;
+            });
+
+        // -------------------------------------------------------------
+        // Built-in Dual-Driver Live Simulator
+        // -------------------------------------------------------------
+        const foodRoute = [
+            { lat: 35.2271, lng: -80.8431, speed: 9.2, bearing: 45 },
+            { lat: 35.2288, lng: -80.8412, speed: 12.1, bearing: 50 },
+            { lat: 35.2307, lng: -80.8390, speed: 14.5, bearing: 48 },
+            { lat: 35.2325, lng: -80.8370, speed: 11.0, bearing: 40 },
+            { lat: 35.2348, lng: -80.8350, speed: 13.8, bearing: 45 }
+        ];
+
+        const groceryRoute = [
+            { lat: 35.2250, lng: -80.8480, speed: 7.5, bearing: 120 },
+            { lat: 35.2240, lng: -80.8455, speed: 10.4, bearing: 115 },
+            { lat: 35.2230, lng: -80.8430, speed: 11.8, bearing: 110 },
+            { lat: 35.2215, lng: -80.8405, speed: 9.0, bearing: 125 },
+            { lat: 35.2200, lng: -80.8380, speed: 12.2, bearing: 120 }
+        ];
+
+        let foodInterval = null;
+        let foodStep = 0;
+        let groceryInterval = null;
+        let groceryStep = 0;
+
+        function sendSimPing(driverId, deliveryType, pt) {
+            fetch('/api/tracking/location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    driverId: driverId,
+                    deliveryType: deliveryType,
+                    latitude: pt.lat,
+                    longitude: pt.lng,
+                    speed: pt.speed,
+                    bearing: pt.bearing,
+                    accuracy: 3.5,
+                    batteryLevel: 94,
+                    isSharing: true,
+                    timestamp: new Date().toISOString()
+                })
+            });
+        }
+
+        const btnSimFood = document.getElementById("btnSimFood");
+        btnSimFood.addEventListener("click", function () {
+            if (foodInterval) {
+                clearInterval(foodInterval);
+                foodInterval = null;
+                btnSimFood.innerHTML = `<i class="bi bi-car-front-fill"></i> <span>Toggle Food Driver (Alex)</span>`;
+                btnSimFood.className = "btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center gap-1";
+            } else {
+                btnSimFood.innerHTML = `<i class="bi bi-stop-circle"></i> <span>Stop Food Driver (Alex)</span>`;
+                btnSimFood.className = "btn btn-sm btn-danger d-flex align-items-center justify-content-center gap-1";
+                foodInterval = setInterval(function () {
+                    const pt = foodRoute[foodStep % foodRoute.length];
+                    foodStep++;
+                    sendSimPing("Alex (Food)", "Food", pt);
+                }, 2000);
+            }
+        });
+
+        const btnSimGrocery = document.getElementById("btnSimGrocery");
+        btnSimGrocery.addEventListener("click", function () {
+            if (groceryInterval) {
+                clearInterval(groceryInterval);
+                groceryInterval = null;
+                btnSimGrocery.innerHTML = `<i class="bi bi-basket-fill"></i> <span>Toggle Grocery Driver (Sam)</span>`;
+                btnSimGrocery.className = "btn btn-sm btn-outline-success d-flex align-items-center justify-content-center gap-1";
+            } else {
+                btnSimGrocery.innerHTML = `<i class="bi bi-stop-circle"></i> <span>Stop Grocery Driver (Sam)</span>`;
+                btnSimGrocery.className = "btn btn-sm btn-success d-flex align-items-center justify-content-center gap-1";
+                groceryInterval = setInterval(function () {
+                    const pt = groceryRoute[groceryStep % groceryRoute.length];
+                    groceryStep++;
+                    sendSimPing("Sam (Grocery)", "Grocery", pt);
+                }, 2000);
+            }
+        });
+    });
+</script>

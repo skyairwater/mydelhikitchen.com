@@ -30,6 +30,16 @@ secrets.json
 # Publishing
 publish/
 
+# Android
+.gradle/
+**/build/
+**/local.properties
+*.apk
+*.ap_
+*.aab
+.idea/
+*.iml
+
 # Miscellaneous
 .DS_Store
 Thumbs.db

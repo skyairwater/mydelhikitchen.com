@@ -43,6 +43,50 @@
   --bs-link-hover-color: #21486B;
 }
 
+[data-theme="baby-pink"] {
+  /* Baby Pink Theme (Blush Rose & Soft Petal) */
+  --primary-color: #C84B70;
+  --primary-hover: #AE375B;
+  --primary-rgb: 200, 75, 112;
+  --bg-color: #FDF5F7;
+  --bg-subtle: #F8E7EC;
+  --accent-color: #D67D97;
+  --accent-hover: #BC637D;
+  --card-bg: #FFFFFF;
+  --text-color: #381E26;
+  --text-muted: #825C69;
+  --border-color: #F1D2DB;
+  --hover-color: #FAE8EE;
+  --footer-bg: #F7E4EA;
+  --nav-bg: #C84B70;
+  --nav-text: #FFFFFF;
+  --nav-link: rgba(255, 255, 255, 0.92);
+  --nav-link-hover: #FFFFFF;
+  --chevron-filter: invert(41%) sepia(48%) saturate(980%) hue-rotate(307deg) brightness(90%) contrast(89%);
+  --transition-speed: 0.25s;
+
+  /* Bootstrap 5 Theme Overrides */
+  --bs-primary: #C84B70;
+  --bs-primary-rgb: 200, 75, 112;
+  --bs-primary-text-emphasis: #AE375B;
+  --bs-primary-bg-subtle: #FAE8EE;
+  --bs-primary-border-subtle: #F1D2DB;
+  --bs-success: #C84B70;
+  --bs-success-rgb: 200, 75, 112;
+  --bs-body-bg: #FDF5F7;
+  --bs-body-color: #381E26;
+  --bs-secondary-color: #825C69;
+  --bs-border-color: #F1D2DB;
+  --bs-card-bg: #FFFFFF;
+  --bs-card-border-color: #F1D2DB;
+  --bs-card-cap-bg: #FFFFFF;
+  --bs-light-bg-subtle: #FDF5F7;
+  --bs-secondary-bg: #F8E7EC;
+  --bs-tertiary-bg: #FAE8EE;
+  --bs-link-color: #C84B70;
+  --bs-link-hover-color: #AE375B;
+}
+
 [data-theme="fresh-green"] {
   /* Fresh Green Theme (Forest & Mint) */
   --primary-color: #236348;
@@ -892,6 +936,7 @@ section.bg-white {
 
 /* Footer */
 .footer {
+  position: static !important;
   background-color: var(--footer-bg);
   border-top: 1px solid var(--border-color) !important;
   color: var(--text-muted) !important;
@@ -993,4 +1038,183 @@ section.bg-white {
     transform: scale(3.2);
     opacity: 0;
   }
+}
+
+/* ==========================================================================
+   jQuery UI Datepicker Modern Styling & Stacking Fix (TinyMCE Overlap)
+   ========================================================================== */
+#ui-datepicker-div {
+  z-index: 999999 !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18) !important;
+  padding: 12px !important;
+  font-family: inherit !important;
+  font-size: 0.9rem !important;
+  width: auto !important;
+  min-width: 280px !important;
+}
+
+#ui-datepicker-div .ui-datepicker-header {
+  background: #0d6efd !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 0 !important;
+  position: relative !important;
+  font-weight: 600 !important;
+}
+
+#ui-datepicker-div .ui-datepicker-title {
+  margin: 0 !important;
+  text-align: center !important;
+  line-height: 24px !important;
+  font-size: 0.95rem !important;
+}
+
+#ui-datepicker-div .ui-datepicker-prev,
+#ui-datepicker-div .ui-datepicker-next {
+  position: absolute !important;
+  top: 6px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#ui-datepicker-div .ui-datepicker-prev:hover,
+#ui-datepicker-div .ui-datepicker-next:hover {
+  background: rgba(255, 255, 255, 0.35) !important;
+}
+
+#ui-datepicker-div .ui-datepicker-prev {
+  left: 8px !important;
+}
+
+#ui-datepicker-div .ui-datepicker-next {
+  right: 8px !important;
+}
+
+#ui-datepicker-div .ui-datepicker-prev span,
+#ui-datepicker-div .ui-datepicker-next span {
+  display: block !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-top: 5px solid transparent !important;
+  border-bottom: 5px solid transparent !important;
+  text-indent: -9999px !important;
+  margin: 0 !important;
+  position: static !important;
+}
+
+#ui-datepicker-div .ui-datepicker-prev span {
+  border-right: 6px solid #ffffff !important;
+  margin-right: 2px !important;
+}
+
+#ui-datepicker-div .ui-datepicker-next span {
+  border-left: 6px solid #ffffff !important;
+  margin-left: 2px !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 3px !important;
+  margin-top: 8px !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar th {
+  padding: 6px 0 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  color: #6c757d !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  border: none !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar td {
+  padding: 0 !important;
+  border: none !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar td a,
+#ui-datepicker-div .ui-datepicker-calendar td span {
+  display: block !important;
+  padding: 6px 0 !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  border-radius: 6px !important;
+  color: #212529 !important;
+  font-weight: 500 !important;
+  border: none !important;
+  background: transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar td a:hover {
+  background: #e9ecef !important;
+  color: #0d6efd !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar td.ui-datepicker-today a {
+  background: #e7f1ff !important;
+  color: #0d6efd !important;
+  font-weight: 700 !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar td.ui-datepicker-current-day a,
+#ui-datepicker-div .ui-datepicker-calendar td a.ui-state-active {
+  background: #0d6efd !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+#ui-datepicker-div .ui-datepicker-calendar td.ui-state-disabled span {
+  color: #adb5bd !important;
+  opacity: 0.6 !important;
+}
+
+/* Dark theme for Datepicker */
+[data-bs-theme="dark"] #ui-datepicker-div {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar th {
+  color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td a,
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td span {
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td a:hover {
+  background: #334155 !important;
+  color: #38bdf8 !important;
+}
+
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td.ui-datepicker-today a {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  border: 1px solid #38bdf8 !important;
+}
+
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td.ui-datepicker-current-day a,
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td a.ui-state-active {
+  background: #0d6efd !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] #ui-datepicker-div .ui-datepicker-calendar td.ui-state-disabled span {
+  color: #64748b !important;
 }

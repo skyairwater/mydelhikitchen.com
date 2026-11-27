@@ -19,6 +19,7 @@ namespace EcommerceStore.Models
     {
         [Required]
         [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}", ApplyFormatInEditMode = true)]
         [Display(Name = "Food Delivery Date")]
         public DateTime DeliveryDate { get; set; } = DateTime.Today;
 

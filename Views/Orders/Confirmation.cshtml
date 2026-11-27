@@ -35,6 +35,10 @@
             if (typeof CartManager !== 'undefined') {
                 CartManager.clear();
             }
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('customer_email', '@Model.CustomerEmail');
+                localStorage.setItem('customer_phone', '@Model.PhoneNumber');
+            }
         });
     </script>
 }

@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Delivery Driver</string>
+    <string name="title_live_tracking">Driver Live Location</string>
+    <string name="start_sharing">Start Sharing</string>
+    <string name="stop_sharing">Stop Sharing</string>
+    <string name="server_url_label">Server Endpoint URL</string>
+    <string name="driver_id_label">Driver Name / ID</string>
+    <string name="status_label">Current Status</string>
+    <string name="status_idle">Idle - Not sharing location</string>
+    <string name="status_sharing">Active - Streaming GPS to server</string>
+    <string name="notification_channel_name">Driver Live Location Service</string>
+    <string name="notification_channel_desc">Shows ongoing live location streaming status and lock screen controls</string>
+</resources>

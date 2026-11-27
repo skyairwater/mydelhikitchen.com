@@ -8,10 +8,12 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-                <div class="card-header bg-success text-white p-4 text-center border-0">
-                    <i class="bi bi-check-circle-fill text-white opacity-75 mb-3" style="font-size: 4rem;"></i>
-                    <h2 class="fw-bold mb-0">Order Confirmed!</h2>
-                    <p class="mb-0 mt-2 fs-5 opacity-75">Thank you for your order, @Model.CustomerEmail.</p>
+                <div class="card-header bg-success text-white py-2 px-3 text-center border-0">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-check-circle-fill text-white" style="font-size: 1.2rem;"></i>
+                        <span class="fw-bold fs-5">Order Confirmed!</span>
+                    </div>
+                    <div class="opacity-75 small" style="font-size: 0.8rem;">Thank you for your order, @Model.CustomerEmail</div>
                 </div>
                 
                 <div class="card-body p-4 p-md-5 bg-white">
@@ -22,7 +24,7 @@
                         </div>
                         <div class="col-sm-6 text-sm-end">
                             <h6 class="text-muted text-uppercase fw-bold mb-2">Order Date</h6>
-                            <p class="fs-5 fw-semibold mb-0">@Model.OrderDate.ToString("MMM dd, yyyy h:mm tt")</p>
+                            <p class="fs-5 fw-semibold mb-0">@Model.OrderDate.ToEstFormat()</p>
                         </div>
                     </div>
 
@@ -30,18 +32,42 @@
                         <h4 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="bi bi-truck me-2 text-primary"></i>Delivery Details</h4>
                         
                         <div class="row g-3">
-                            <div class="col-sm-4 text-muted fw-semibold">Delivery Address:</div>
-                            <div class="col-sm-8 fw-bold">@Model.DeliveryAddress</div>
-
-                            <div class="col-sm-4 text-muted fw-semibold">Phone:</div>
-                            <div class="col-sm-8 fw-bold">@Model.PhoneNumber</div>
-
                             @if(Model.AdminFoodOrder != null)
                             {
-                                <div class="col-sm-4 text-muted fw-semibold">Expected Date:</div>
+                                <div class="col-sm-4 text-muted fw-semibold">Delivery Date:</div>
                                 <div class="col-sm-8 fw-bold text-success">@Model.AdminFoodOrder.DeliveryDate.ToString("MMMM dd, yyyy")</div>
                             }
+
+                            <div class="col-sm-4 text-muted fw-semibold">
+                                @(Model.DeliveryAddress.StartsWith("Uptown Pickup:", StringComparison.OrdinalIgnoreCase) ? "Pickup Spot:" : "Delivery Address:")
+                            </div>
+                            <div class="col-sm-8 fw-bold">@Model.DeliveryAddress</div>
+
+                            <div class="col-sm-4 text-muted fw-semibold">Your Phone Number:</div>
+                            <div class="col-sm-8 fw-bold">@Model.PhoneNumber</div>
+
+                            <div class="col-sm-4 text-muted fw-semibold">For Questions:</div>
+                            <div class="col-sm-8 fw-bold">
+                                <a href="tel:3133980524" class="text-decoration-none text-primary">313.398.0524</a>
+                            </div>
                         </div>
+
+                        @if (ViewBag.PickupLocation != null)
+                        {
+                            var loc = (EcommerceStore.Models.DeliveryLocation)ViewBag.PickupLocation;
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="fw-bold text-dark mb-2">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>Pickup Location Map: <span class="text-primary">@loc.Name</span>
+                                </h6>
+                                @if (!string.IsNullOrWhiteSpace(loc.Description))
+                                {
+                                    <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>@loc.Description</p>
+                                }
+                                <div class="rounded-4 overflow-hidden border shadow-sm" style="height: 350px;" id="confirmationPickupMap"
+                                     data-lat="@loc.Latitude" data-lng="@loc.Longitude" data-name="@loc.Name" data-desc="@(loc.Description ?? "")">
+                                </div>
+                            </div>
+                        }
                     </div>
 
                     @if(Model.AdminFoodOrder != null && !string.IsNullOrWhiteSpace(Model.AdminFoodOrder.Comments))
@@ -82,13 +108,16 @@
 
                         <hr class="my-4" />
                         
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-muted fw-semibold">Delivery Charge</span>
-                            <span class="fs-5 text-dark">@Model.DeliveryCharge.ToString("C")</span>
-                        </div>
+                        @if (Model.DeliveryCharge > 0)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted fw-semibold">Delivery Charge</span>
+                                <span class="fs-5 text-dark">@Model.DeliveryCharge.ToString("C")</span>
+                            </div>
+                        }
                         
                         <div class="d-flex justify-content-between align-items-center bg-light p-4 rounded-3 border mt-4">
-                            <span class="text-dark fs-4 fw-bold">Total Paid</span>
+                            <span class="text-dark fs-4 fw-bold">Order Total</span>
                             <span class="fs-3 fw-bold text-primary">@Model.TotalAmount.ToString("C")</span>
                         </div>
                     </div>
@@ -103,3 +132,38 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('customer_email', '@Model.CustomerEmail');
+            localStorage.setItem('customer_phone', '@Model.PhoneNumber');
+        }
+    </script>
+    @if (ViewBag.PickupLocation != null)
+    {
+        <!-- Leaflet CSS & JS -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const mapElem = document.getElementById('confirmationPickupMap');
+                if (mapElem) {
+                    const lat = parseFloat(mapElem.getAttribute('data-lat')) || 35.2271;
+                    const lng = parseFloat(mapElem.getAttribute('data-lng')) || -80.8431;
+                    const name = mapElem.getAttribute('data-name') || 'Pickup Spot';
+                    const desc = mapElem.getAttribute('data-desc') || '';
+
+                    const map = L.map('confirmationPickupMap').setView([lat, lng], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup(`<strong>${name}</strong><br/>${desc}`)
+                        .openPopup();
+                }
+            });
+        </script>
+    }
+}

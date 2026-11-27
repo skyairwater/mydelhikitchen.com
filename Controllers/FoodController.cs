@@ -30,13 +30,27 @@ namespace EcommerceStore.Controllers
                 .OrderByDescending(o => o.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            if (activeOrder != null && activeOrder.MaxOrders.HasValue)
+            if (activeOrder != null)
             {
-                var totalOrdered = await _context.CustomerFoodOrders
-                    .Where(o => o.AdminFoodOrderId == activeOrder.Id)
-                    .CountAsync();
-                
-                ViewBag.RemainingOrders = activeOrder.MaxOrders.Value - totalOrdered;
+                if (activeOrder.MaxOrders.HasValue)
+                {
+                    var totalOrdered = await _context.CustomerFoodOrders
+                        .Where(o => o.AdminFoodOrderId == activeOrder.Id)
+                        .CountAsync();
+                    
+                    ViewBag.RemainingOrders = activeOrder.MaxOrders.Value - totalOrdered;
+                }
+
+                if (activeOrder.DeliveryLocationIds != null && activeOrder.DeliveryLocationIds.Any())
+                {
+                    ViewBag.UptownLocations = await _context.DeliveryLocations
+                        .Where(l => activeOrder.DeliveryLocationIds.Contains(l.Id))
+                        .ToListAsync();
+                }
+                else
+                {
+                    ViewBag.UptownLocations = new List<DeliveryLocation>();
+                }
             }
 
             return View(activeOrder);
@@ -81,7 +95,7 @@ namespace EcommerceStore.Controllers
                     DeliveryCharge = adminOrder.DeliveryCharge
                 };
 
-                decimal total = (adminOrder.Price * model.MainQuantity) + adminOrder.DeliveryCharge;
+                decimal foodSubtotal = adminOrder.Price * model.MainQuantity;
 
                 if (model.AlaCarteQuantities != null)
                 {
@@ -99,13 +113,21 @@ namespace EcommerceStore.Controllers
                                     Price = alaCarteItem.Price.Value,
                                     Quantity = qty
                                 });
-                                total += (alaCarteItem.Price.Value * qty);
+                                foodSubtotal += (alaCarteItem.Price.Value * qty);
                             }
                         }
                     }
                 }
 
+                decimal salesTax = 0;
+                if (adminOrder.AddTaxToCustomers && adminOrder.TaxPercentage > 0)
+                {
+                    salesTax = Math.Round((foodSubtotal * adminOrder.TaxPercentage) / 100m, 2);
+                }
+
+                decimal total = foodSubtotal + adminOrder.DeliveryCharge + salesTax;
                 customerOrder.TotalAmount = total;
+                customerOrder.AdminFoodOrder = adminOrder;
                 _context.CustomerFoodOrders.Add(customerOrder);
                 await _context.SaveChangesAsync();
                 
@@ -139,6 +161,16 @@ namespace EcommerceStore.Controllers
             if (customerOrder == null)
             {
                 return NotFound();
+            }
+
+            // If this is an Uptown pickup order, look up the matched pickup location coordinates
+            if (customerOrder.DeliveryAddress.StartsWith("Uptown Pickup:", StringComparison.OrdinalIgnoreCase))
+            {
+                var locName = customerOrder.DeliveryAddress.Substring("Uptown Pickup:".Length).Trim();
+                var pickupLocation = await _context.DeliveryLocations
+                    .FirstOrDefaultAsync(l => l.Name.ToLower() == locName.ToLower() || locName.ToLower().StartsWith(l.Name.ToLower()));
+
+                ViewBag.PickupLocation = pickupLocation;
             }
 
             return View(customerOrder);
